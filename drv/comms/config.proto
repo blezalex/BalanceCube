@@ -10,10 +10,10 @@ message Config {
   optional Callibration callibration = 1;
 
   message PidConfig {
-    required float p = 1 [ default = 1200 ];
-    required float d = 2 [ default = 0.65 ];
-    required float i = 3 [ default = 0.1 ];
-    required float max_i = 4 [ default = 3 ];
+    required float p = 1 [ default = 0 ];
+    required float d = 2 [ default = 0 ];
+    required float i = 3 [ default = 0 ];
+    required float max_i = 4 [ default = 0 ];
     optional float i_expo = 13 [ default = 0 ];
   }
 
@@ -84,8 +84,8 @@ message Config {
   
   message Misc {
     // 0-1, 1 = 100% of output power = no warning at all
-    required float throttle_threshold = 7 [ default = 0.75 ];
-    required float throttle_rc = 6 [ default = 0.05 ];
+    required float stop_wheel_signal_p = 7 [ default = 0 ];
+    required float throttle_rc = 6 [ default = 0.0001 ];
 
     // Get pushback/beep if duty_cycle exceeds this threshold
     optional float duty_threshold = 8 [ default = 0.75 ];

@@ -81,7 +81,9 @@ public:
 			// float fwdTargetAngle = mapRcInput(rxVals[1]) * 5;
 			// float rightTargetAngle = mapRcInput(rxVals[0]) * 5;
 
-			float rightTargetAngle = 0, fwdTargetAngle = 0;
+			float avg_duty1 = fwd_lpf_.getVal();
+			float rightTargetAngle = 0;
+			float fwdTargetAngle = avg_duty1 * settings_->misc.stop_wheel_signal_p;
 			
 
 			if (current_state == State::Starting){
@@ -93,6 +95,7 @@ public:
 				right = roll_balancer_.compute(imu_.angles[0] - rightTargetAngle, -update.gyro[0]);
 			}
 
+			fwd_lpf_.compute(fwd);
 			float duty1 = motor1_out_lpf_.compute(fwd);
 
 			bool dyty1_fwd = duty1 > 0;

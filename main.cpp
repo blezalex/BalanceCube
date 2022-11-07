@@ -8,7 +8,7 @@
 #include "stm_lib/inc/stm32f10x_iwdg.h"
 #include "stm_lib/inc/stm32f10x_rcc.h"
 #include "stm_lib/inc/stm32f10x_adc.h"
-#include "stm_lib/inc/stm32f10x_can.h"
+// #include "stm_lib/inc/stm32f10x_can.h"
 
 
 #include <math.h>
@@ -21,7 +21,6 @@
 #include "drv/comms/communicator.hpp"
 #include "drv/mpu6050/mpu.hpp"
 #include "drv/settings/settings.hpp"
-#include "drv/vesc/vesc.hpp"
 #include "global.h"
 #include "guards/angleGuard.hpp"
 #include "guards/footpadGuard.hpp"
@@ -132,65 +131,6 @@ typedef enum
 GenericOut* status_led_ext;
 
 
-void initCAN() {
-  RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN1, ENABLE);
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
-
-  GPIO_InitTypeDef GPIO_InitStructure;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
-  GPIO_Init(GPIOB, &GPIO_InitStructure);
-
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
-  GPIO_Init(GPIOB, &GPIO_InitStructure);
-
-  GPIO_PinRemapConfig(GPIO_Remap1_CAN1 , ENABLE);
-
-  CAN_InitTypeDef CAN_InitStructure;
-  CAN_FilterInitTypeDef CAN_FilterInitStructure;
-
-  /* CAN register init */
-  CAN_DeInit(CAN1);
-  CAN_StructInit(&CAN_InitStructure);
-
-  /* CAN cell init */
-  CAN_InitStructure.CAN_TTCM = DISABLE;
-  CAN_InitStructure.CAN_ABOM = DISABLE;
-  CAN_InitStructure.CAN_AWUM = DISABLE;
-  CAN_InitStructure.CAN_NART = DISABLE;
-  CAN_InitStructure.CAN_RFLM = DISABLE;
-  CAN_InitStructure.CAN_TXFP = DISABLE;
-  CAN_InitStructure.CAN_Mode = CAN_Mode_Normal;
-
-  CAN_InitStructure.CAN_SJW = CAN_SJW_1tq;
-  CAN_InitStructure.CAN_BS1 = CAN_BS1_3tq;
-  CAN_InitStructure.CAN_BS2 = CAN_BS2_5tq;
-
-  CAN_InitStructure.CAN_Prescaler = 4*2; //Prescaler for 500 kBps
-  //CAN_InitStructure.CAN_Prescaler = 4*1; //Prescaler for 1 MBps
-
-  CAN_Init(CAN1, &CAN_InitStructure);
-  while(CAN_Init(CAN1, &CAN_InitStructure) != CAN_InitStatus_Success);
-
-  /* CAN filter init */
-  CAN_FilterInitStructure.CAN_FilterNumber = 0;
-  CAN_FilterInitStructure.CAN_FilterMode = CAN_FilterMode_IdMask;
-  CAN_FilterInitStructure.CAN_FilterScale = CAN_FilterScale_32bit;
-  CAN_FilterInitStructure.CAN_FilterIdHigh = 0x0000;
-  CAN_FilterInitStructure.CAN_FilterIdLow = 0x0000;
-  CAN_FilterInitStructure.CAN_FilterMaskIdHigh = 0x0000;
-  CAN_FilterInitStructure.CAN_FilterMaskIdLow = 0x0000;
-  CAN_FilterInitStructure.CAN_FilterFIFOAssignment = 0;
-  CAN_FilterInitStructure.CAN_FilterActivation = ENABLE;
-  CAN_FilterInit(&CAN_FilterInitStructure);
-}
-
-
-
-// !! WHEEL weight acts as a reaction wheel :(
-
 extern uint8_t cf_data[] asm("_binary_build_descriptor_pb_bin_deflate_start");
 extern uint8_t cf_data_e[] asm("_binary_build_descriptor_pb_bin_deflate_end");
 
@@ -245,8 +185,31 @@ int main(void) {
   status_led.init();
   status_led.setState(0);
 
-  initCAN();
+  PwmOut::InitAll();
+  PwmOut pmw1(1);
+  pmw1.set(480);
 
+  GenericOut dir1(RCC_APB2Periph_GPIOB, GPIOB, GPIO_Pin_7, false);
+  dir1.init();
+  // while (true) {
+  //   IWDG_ReloadCounter();
+  //   dir1.toggle();
+  //   delay(100);
+  // }
+
+  // while (true) {
+  //   for (int i = 0; i <= 500; i++) {
+  //     IWDG_ReloadCounter();
+  //     pmw1.set(500-i);
+  //     delay(20);
+  //   }
+  //   for (int i = 0; i <= 500; i++) {
+  //     IWDG_ReloadCounter();
+  //     pmw1.set(i);
+  //     delay(20);
+  //   }
+  //   dir1.toggle();
+  // }
 
   IMU imu(&cfg);
   AngleGuard angle_guard(imu, &cfg.balance_settings);
@@ -271,18 +234,15 @@ int main(void) {
   //	debug_out.init();
 
   FootpadGuard foot_pad_guard(&cfg.foot_pad);
-  Guard *guards[] = {&angle_guard, &foot_pad_guard};
+  Guard *guards[] = {&angle_guard};
   int guards_count = sizeof(guards) / sizeof(Guard *);
 
-  VescComm vesc(&Serial2);
   LPF erpm_lpf(&cfg.misc.erpm_rc);
   LPF v_in_lpf(&cfg.misc.volt_rc);
   LPF duty_lpf(&cfg.misc.duty_rc);
 
-
-
   static BoardController main_ctrl(&cfg, imu, status_led, beeper, guards,
-                            guards_count, green_led, &vesc);
+                            guards_count, green_led, &pmw1, &dir1);
 
   accGyro.setListener(&main_ctrl);
 
@@ -298,7 +258,6 @@ int main(void) {
     if ((uint16_t)(millis() - last_check_time) > 100u) {
       last_check_time = millis();
 
-      led_controller_set_state(vesc.mc_values_.rpm, imu.angles[ANGLE_DRIVE]);
       switch (debug_stream_type) {
         case 1:
           debug[write_pos++] = (int8_t)imu.angles[ANGLE_DRIVE];
@@ -310,20 +269,12 @@ int main(void) {
           debug[write_pos++] = (int8_t) (main_ctrl.fwd / 10);
           break;
         case 4:
-          debug[write_pos++] = (int8_t)(main_ctrl.motor1_.get());
-          break;
-        case 5:
-          debug[write_pos++] = (int8_t)(vesc.mc_values_.v_in);
-          break;
-        case 6:
-          debug[write_pos++] = (int8_t)(vesc.mc_values_.avg_input_current);
+          debug[write_pos++] = (int8_t)(main_ctrl.pwm1_->get());
           break;
       }
 
       if (write_pos >= sizeof(debug)) write_pos = 0;
     }
-
-    vesc.updateCan();
 
     uint8_t comms_msg = comms.update();
     switch (comms_msg) {
@@ -386,16 +337,7 @@ int main(void) {
         stats.stear_angle = imu.angles[ANGLE_STEER];
         stats.pad_pressure1 = main_ctrl.right;
         stats.pad_pressure1 = main_ctrl.fwd;
-        stats.batt_current = main_ctrl.motor1_.get();
-        stats.batt_voltage = main_ctrl.motor2_.get();
-        stats.batt_current = vesc.mc_values_.avg_input_current;
-        stats.batt_voltage = vesc.mc_values_.v_in;
-        stats.motor_current = vesc.mc_values_.avg_motor_current;
-        stats.distance_traveled = vesc.mc_values_.tachometer_abs;
-        stats.speed = vesc.mc_values_.rpm;
-        stats.motor_duty = vesc.mc_values_.duty_now;
-        stats.esc_temp = vesc.mc_values_.temp_mos_filtered;
-        stats.motor_temp = vesc.mc_values_.temp_motor_filtered;
+        stats.batt_current = main_ctrl.motor1_out_lpf_.getVal();
 
         int16_t data_len =
             saveProtoToBuffer(scratch, sizeof(scratch), Stats_fields, &stats);
@@ -416,16 +358,6 @@ int main(void) {
       case RequestId_GET_CONFIG_DESCRIPTOR:
         comms.SendMsg(ReplyId_CONFIG_DESCRIPTOR, (uint8_t*)cf_data, (int)cf_data_e - (int)cf_data);
         break;
-    }
-
-    if (vesc.update() == (uint8_t)VescComm::COMM_PACKET_ID::COMM_GET_VALUES) {
-      // got a stats update; recalculate smoothed values
-      // Runs at 20hz (values requested from balance controller to sync with
-      // current control over USART request.
-      vesc.mc_values_.erpm_smoothed = erpm_lpf.compute(vesc.mc_values_.rpm);
-      vesc.mc_values_.v_in_smoothed = v_in_lpf.compute(vesc.mc_values_.v_in);
-      vesc.mc_values_.duty_smoothed =
-          duty_lpf.compute(vesc.mc_values_.duty_now);
     }
   }
 }

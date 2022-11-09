@@ -87,6 +87,10 @@ message Config {
     required float stop_wheel_signal_p = 7 [ default = 0 ];
     required float throttle_rc = 6 [ default = 0.0001 ];
 
+    // the values are 1 or -1
+    optional int32 motor1_dir = 1 [ default = 1 ];
+    optional int32 motor2_dir = 2 [ default = 1 ];
+
     // Get pushback/beep if duty_cycle exceeds this threshold
     optional float duty_threshold = 8 [ default = 0.75 ];
     optional float duty_rc = 9 [ default = 0.25 ];

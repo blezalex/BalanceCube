@@ -187,29 +187,17 @@ int main(void) {
 
   PwmOut::InitAll();
   PwmOut pmw1(1);
-  pmw1.set(480);
+  pmw1.set(500);
+
+  PwmOut pwm2(2);
+  pwm2.set(500);
 
   GenericOut dir1(RCC_APB2Periph_GPIOB, GPIOB, GPIO_Pin_7, false);
   dir1.init();
-  // while (true) {
-  //   IWDG_ReloadCounter();
-  //   dir1.toggle();
-  //   delay(100);
-  // }
 
-  // while (true) {
-  //   for (int i = 0; i <= 500; i++) {
-  //     IWDG_ReloadCounter();
-  //     pmw1.set(500-i);
-  //     delay(20);
-  //   }
-  //   for (int i = 0; i <= 500; i++) {
-  //     IWDG_ReloadCounter();
-  //     pmw1.set(i);
-  //     delay(20);
-  //   }
-  //   dir1.toggle();
-  // }
+  GenericOut dir2(RCC_APB2Periph_GPIOB, GPIOB, GPIO_Pin_8, false);
+  dir2.init();
+
 
   IMU imu(&cfg);
   AngleGuard angle_guard(imu, &cfg.balance_settings);
@@ -242,7 +230,7 @@ int main(void) {
   LPF duty_lpf(&cfg.misc.duty_rc);
 
   static BoardController main_ctrl(&cfg, imu, status_led, beeper, guards,
-                            guards_count, green_led, &pmw1, &dir1);
+                            guards_count, green_led, &pmw1, &dir1, &pwm2, &dir2);
 
   accGyro.setListener(&main_ctrl);
 
@@ -267,9 +255,6 @@ int main(void) {
           break;
         case 3:
           debug[write_pos++] = (int8_t) (main_ctrl.fwd / 10);
-          break;
-        case 4:
-          debug[write_pos++] = (int8_t)(main_ctrl.pwm1_->get());
           break;
       }
 

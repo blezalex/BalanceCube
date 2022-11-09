@@ -43,6 +43,10 @@ typedef struct _Config_FootPadSettings {
 } Config_FootPadSettings;
 
 typedef struct _Config_Misc { 
+    bool has_motor1_dir;
+    int32_t motor1_dir; 
+    bool has_motor2_dir;
+    int32_t motor2_dir; 
     float throttle_rc; 
     float stop_wheel_signal_p; 
     bool has_duty_threshold;
@@ -102,14 +106,14 @@ extern "C" {
 #define Config_FootPadSettings_init_default      {0.05f, 3300, 2000, 100}
 #define Config_BalancingConfig_init_default      {0.15f, 15.0f, 15, 40, 14, 300, 1.0f, 300, 0.15f, 2u, false, 0.02f, false, 0, false, 0.0f}
 #define Config_PusbackSettings_init_default      {1000, 5, 0.5f, 0.2f}
-#define Config_Misc_init_default                 {0.0001f, 0.0f, false, 0.75f, false, 0.25f, false, 6000, false, 0.25f, false, 45.0f, false, 0.25f, false, 0.0f}
+#define Config_Misc_init_default                 {false, 1, false, 1, 0.0001f, 0.0f, false, 0.75f, false, 0.25f, false, 6000, false, 0.25f, false, 45.0f, false, 0.25f, false, 0.0f}
 #define Config_init_zero                         {false, Config_Callibration_init_zero, Config_PidConfig_init_zero, Config_FootPadSettings_init_zero, Config_BalancingConfig_init_zero, Config_Misc_init_zero, false, Config_PusbackSettings_init_zero, Config_PidConfig_init_zero, Config_PidConfig_init_zero}
 #define Config_Callibration_init_zero            {0, 0, 0}
 #define Config_PidConfig_init_zero               {0, 0, 0, 0, false, 0}
 #define Config_FootPadSettings_init_zero         {0, 0, 0, 0}
 #define Config_BalancingConfig_init_zero         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, false, 0, false, 0, false, 0}
 #define Config_PusbackSettings_init_zero         {0, 0, 0, 0}
-#define Config_Misc_init_zero                    {0, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0}
+#define Config_Misc_init_zero                    {false, 0, false, 0, 0, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define Config_BalancingConfig_balance_expo_tag  1
@@ -132,6 +136,8 @@ extern "C" {
 #define Config_FootPadSettings_min_level_to_start_tag 2
 #define Config_FootPadSettings_min_level_to_continue_tag 3
 #define Config_FootPadSettings_shutoff_delay_ms_tag 4
+#define Config_Misc_motor1_dir_tag               1
+#define Config_Misc_motor2_dir_tag               2
 #define Config_Misc_throttle_rc_tag              6
 #define Config_Misc_stop_wheel_signal_p_tag      7
 #define Config_Misc_duty_threshold_tag           8
@@ -230,6 +236,8 @@ X(a, STATIC,   REQUIRED, FLOAT,    push_release_speed_deg_sec,   4)
 #define Config_PusbackSettings_DEFAULT (const pb_byte_t*)"\x08\xe8\x07\x10\x05\x1d\x00\x00\x00\x3f\x25\xcd\xcc\x4c\x3e\x00"
 
 #define Config_Misc_FIELDLIST(X, a) \
+X(a, STATIC,   OPTIONAL, INT32,    motor1_dir,        1) \
+X(a, STATIC,   OPTIONAL, INT32,    motor2_dir,        2) \
 X(a, STATIC,   REQUIRED, FLOAT,    throttle_rc,       6) \
 X(a, STATIC,   REQUIRED, FLOAT,    stop_wheel_signal_p,   7) \
 X(a, STATIC,   OPTIONAL, FLOAT,    duty_threshold,    8) \
@@ -240,7 +248,7 @@ X(a, STATIC,   OPTIONAL, FLOAT,    low_volt_threshold,  12) \
 X(a, STATIC,   OPTIONAL, FLOAT,    volt_rc,          13) \
 X(a, STATIC,   OPTIONAL, FLOAT,    speed_input_mixin,  14)
 #define Config_Misc_CALLBACK NULL
-#define Config_Misc_DEFAULT (const pb_byte_t*)"\x35\x17\xb7\xd1\x38\x3d\x00\x00\x00\x00\x45\x00\x00\x40\x3f\x4d\x00\x00\x80\x3e\x50\xf0\x2e\x5d\x00\x00\x80\x3e\x65\x00\x00\x34\x42\x6d\x00\x00\x80\x3e\x75\x00\x00\x00\x00\x00"
+#define Config_Misc_DEFAULT (const pb_byte_t*)"\x08\x01\x10\x01\x35\x17\xb7\xd1\x38\x3d\x00\x00\x00\x00\x45\x00\x00\x40\x3f\x4d\x00\x00\x80\x3e\x50\xf0\x2e\x5d\x00\x00\x80\x3e\x65\x00\x00\x34\x42\x6d\x00\x00\x80\x3e\x75\x00\x00\x00\x00\x00"
 
 extern const pb_msgdesc_t Config_msg;
 extern const pb_msgdesc_t Config_Callibration_msg;
@@ -263,10 +271,10 @@ extern const pb_msgdesc_t Config_Misc_msg;
 #define Config_BalancingConfig_size              102
 #define Config_Callibration_size                 15
 #define Config_FootPadSettings_size              38
-#define Config_Misc_size                         51
+#define Config_Misc_size                         73
 #define Config_PidConfig_size                    25
 #define Config_PusbackSettings_size              32
-#define Config_size                              329
+#define Config_size                              351
 
 #ifdef __cplusplus
 } /* extern "C" */

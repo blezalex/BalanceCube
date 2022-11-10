@@ -6,6 +6,16 @@
 #include "lpf.hpp"
 
 
+//https://www.desmos.com/calculator/atzqop6rhr
+static float applyExpo(float value, int expo_type, float expo_value) {
+	switch (expo_type) {
+		case 0: return applyExpoReal(value, expo_value);
+		case 1: return applyExpoNatural(value, expo_value);
+		case 2: return applyExpoPoly(value, expo_value);
+		default: return value;
+	}
+}
+
 class BalanceController  {
 public:
 	BalanceController(const Config* settings, Config_PidConfig* pid_config) :
@@ -20,21 +30,9 @@ public:
 		prev_error_ = 0;
 	}
 
-	float getInput(float angle, float balance_angle) {
-		float raw_input = (balance_angle - angle) / settings_->balance_settings.balance_angle_scaling;
-		float p_input = constrain(raw_input, -1, 1);
 
-		switch (settings_->balance_settings.expo_type) {
-		case 0: return applyExpoReal(p_input, settings_->balance_settings.balance_expo);
-		case 1: return applyExpoNatural(p_input, settings_->balance_settings.balance_expo);
-		case 2: return applyExpoPoly(p_input, settings_->balance_settings.balance_expo);
-		default: return p_input;
-		}
-	}
 
 	float calcRatePid(float rateRequest,  float rate) {
-		rateRequest = constrain(rateRequest, -settings_->misc.speed_input_mixin, settings_->misc.speed_input_mixin);
-
 		float error = rateRequest * 400 - rate;
 		float d_term  = error - prev_error_;
 		d_term = constrain(d_term, -settings_->balance_settings.balance_d_param_limiter, settings_->balance_settings.balance_d_param_limiter);
@@ -42,22 +40,20 @@ public:
 		d_term = d_lpf_.compute(d_term);
 		float result = rate_pid_.compute(error, d_term);
 
-		// shared with balance_settings.max_update_limiter ConstrainedOut
-		// result = constrain(result, -settings_->balance_settings.max_update_limiter, settings_->balance_settings.max_update_limiter);
-		return result;
+		result = constrain(result, -1, 1);
+
+		return applyExpo(result, settings_->balance_settings.expo_type, settings_->balance_settings.balance_expo);
 	}
 
 	// Compute torque needed while board in normal mode.
-	// Returns torque request based on current imu and gyro readings. Expected range is -1:1,
-	// but not limited here to that range.
+	// Returns torque request based on current imu and gyro readings. Range is [-1:1].
 	float compute(float angle, float rate) {
 		float rateRequest = angle_pid_.compute(angle);
 		return calcRatePid(rateRequest, rate);
 	}
 
 	// Compute torque needed while board in starting up phase (coming from one side to balanced state).
-	// Returns torque request based on current imu and gyro readings. Expected range is -1:1,
-	// but not limited here to that range.
+	// Returns torque request based on current imu and gyro readings. Range is [-1:1].
 	int16_t computeStarting(float angle, float rate, float pid_P_multiplier) {
 		rate_pid_.resetI();
 		angle_pid_.resetI();

@@ -225,10 +225,6 @@ int main(void) {
   Guard *guards[] = {&angle_guard};
   int guards_count = sizeof(guards) / sizeof(Guard *);
 
-  LPF erpm_lpf(&cfg.misc.erpm_rc);
-  LPF v_in_lpf(&cfg.misc.volt_rc);
-  LPF duty_lpf(&cfg.misc.duty_rc);
-
   static BoardController main_ctrl(&cfg, imu, status_led, beeper, guards,
                             guards_count, green_led, &pmw1, &dir1, &pwm2, &dir2);
 

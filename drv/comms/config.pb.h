@@ -49,20 +49,6 @@ typedef struct _Config_Misc {
     int32_t motor2_dir; 
     float throttle_rc; 
     float stop_wheel_signal_p; 
-    bool has_duty_threshold;
-    float duty_threshold; 
-    bool has_duty_rc;
-    float duty_rc; 
-    bool has_erpm_threshold;
-    int32_t erpm_threshold; 
-    bool has_erpm_rc;
-    float erpm_rc; 
-    bool has_low_volt_threshold;
-    float low_volt_threshold; 
-    bool has_volt_rc;
-    float volt_rc; 
-    bool has_speed_input_mixin;
-    float speed_input_mixin; 
 } Config_Misc;
 
 typedef struct _Config_PidConfig { 
@@ -74,13 +60,6 @@ typedef struct _Config_PidConfig {
     float i_expo; 
 } Config_PidConfig;
 
-typedef struct _Config_PusbackSettings { 
-    int32_t min_speed_erpm; 
-    int32_t push_angle; 
-    float push_raise_speed_deg_sec; 
-    float push_release_speed_deg_sec; 
-} Config_PusbackSettings;
-
 typedef struct _Config { 
     bool has_callibration;
     Config_Callibration callibration; 
@@ -88,8 +67,6 @@ typedef struct _Config {
     Config_FootPadSettings foot_pad; 
     Config_BalancingConfig balance_settings; 
     Config_Misc misc; 
-    bool has_pushback;
-    Config_PusbackSettings pushback; 
     Config_PidConfig yaw_pid; 
     Config_PidConfig rate_pid; 
 } Config;
@@ -100,20 +77,18 @@ extern "C" {
 #endif
 
 /* Initializer values for message structs */
-#define Config_init_default                      {false, Config_Callibration_init_default, Config_PidConfig_init_default, Config_FootPadSettings_init_default, Config_BalancingConfig_init_default, Config_Misc_init_default, false, Config_PusbackSettings_init_default, Config_PidConfig_init_default, Config_PidConfig_init_default}
+#define Config_init_default                      {false, Config_Callibration_init_default, Config_PidConfig_init_default, Config_FootPadSettings_init_default, Config_BalancingConfig_init_default, Config_Misc_init_default, Config_PidConfig_init_default, Config_PidConfig_init_default}
 #define Config_Callibration_init_default         {0.0f, 0.0f, 0.0f}
 #define Config_PidConfig_init_default            {0.0f, 0.0f, 0.0f, 0.0f, false, 0.0f}
 #define Config_FootPadSettings_init_default      {0.05f, 3300, 2000, 100}
 #define Config_BalancingConfig_init_default      {0.15f, 15.0f, 15, 40, 14, 300, 1.0f, 300, 0.15f, 2u, false, 0.02f, false, 0, false, 0.0f}
-#define Config_PusbackSettings_init_default      {1000, 5, 0.5f, 0.2f}
-#define Config_Misc_init_default                 {false, 1, false, 1, 0.0001f, 0.0f, false, 0.75f, false, 0.25f, false, 6000, false, 0.25f, false, 45.0f, false, 0.25f, false, 0.0f}
-#define Config_init_zero                         {false, Config_Callibration_init_zero, Config_PidConfig_init_zero, Config_FootPadSettings_init_zero, Config_BalancingConfig_init_zero, Config_Misc_init_zero, false, Config_PusbackSettings_init_zero, Config_PidConfig_init_zero, Config_PidConfig_init_zero}
+#define Config_Misc_init_default                 {false, 1, false, 1, 0.0001f, 0.0f}
+#define Config_init_zero                         {false, Config_Callibration_init_zero, Config_PidConfig_init_zero, Config_FootPadSettings_init_zero, Config_BalancingConfig_init_zero, Config_Misc_init_zero, Config_PidConfig_init_zero, Config_PidConfig_init_zero}
 #define Config_Callibration_init_zero            {0, 0, 0}
 #define Config_PidConfig_init_zero               {0, 0, 0, 0, false, 0}
 #define Config_FootPadSettings_init_zero         {0, 0, 0, 0}
 #define Config_BalancingConfig_init_zero         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, false, 0, false, 0, false, 0}
-#define Config_PusbackSettings_init_zero         {0, 0, 0, 0}
-#define Config_Misc_init_zero                    {false, 0, false, 0, 0, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0, false, 0}
+#define Config_Misc_init_zero                    {false, 0, false, 0, 0, 0}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define Config_BalancingConfig_balance_expo_tag  1
@@ -140,28 +115,16 @@ extern "C" {
 #define Config_Misc_motor2_dir_tag               2
 #define Config_Misc_throttle_rc_tag              6
 #define Config_Misc_stop_wheel_signal_p_tag      7
-#define Config_Misc_duty_threshold_tag           8
-#define Config_Misc_duty_rc_tag                  9
-#define Config_Misc_erpm_threshold_tag           10
-#define Config_Misc_erpm_rc_tag                  11
-#define Config_Misc_low_volt_threshold_tag       12
-#define Config_Misc_volt_rc_tag                  13
-#define Config_Misc_speed_input_mixin_tag        14
 #define Config_PidConfig_p_tag                   1
 #define Config_PidConfig_d_tag                   2
 #define Config_PidConfig_i_tag                   3
 #define Config_PidConfig_max_i_tag               4
 #define Config_PidConfig_i_expo_tag              13
-#define Config_PusbackSettings_min_speed_erpm_tag 1
-#define Config_PusbackSettings_push_angle_tag    2
-#define Config_PusbackSettings_push_raise_speed_deg_sec_tag 3
-#define Config_PusbackSettings_push_release_speed_deg_sec_tag 4
 #define Config_callibration_tag                  1
 #define Config_angle_pid_tag                     2
 #define Config_foot_pad_tag                      3
 #define Config_balance_settings_tag              4
 #define Config_misc_tag                          5
-#define Config_pushback_tag                      6
 #define Config_yaw_pid_tag                       8
 #define Config_rate_pid_tag                      9
 
@@ -172,7 +135,6 @@ X(a, STATIC,   REQUIRED, MESSAGE,  angle_pid,         2) \
 X(a, STATIC,   REQUIRED, MESSAGE,  foot_pad,          3) \
 X(a, STATIC,   REQUIRED, MESSAGE,  balance_settings,   4) \
 X(a, STATIC,   REQUIRED, MESSAGE,  misc,              5) \
-X(a, STATIC,   OPTIONAL, MESSAGE,  pushback,          6) \
 X(a, STATIC,   REQUIRED, MESSAGE,  yaw_pid,           8) \
 X(a, STATIC,   REQUIRED, MESSAGE,  rate_pid,          9)
 #define Config_CALLBACK NULL
@@ -182,7 +144,6 @@ X(a, STATIC,   REQUIRED, MESSAGE,  rate_pid,          9)
 #define Config_foot_pad_MSGTYPE Config_FootPadSettings
 #define Config_balance_settings_MSGTYPE Config_BalancingConfig
 #define Config_misc_MSGTYPE Config_Misc
-#define Config_pushback_MSGTYPE Config_PusbackSettings
 #define Config_yaw_pid_MSGTYPE Config_PidConfig
 #define Config_rate_pid_MSGTYPE Config_PidConfig
 
@@ -227,35 +188,19 @@ X(a, STATIC,   OPTIONAL, FLOAT,    usart_control_scaling,  13)
 #define Config_BalancingConfig_CALLBACK NULL
 #define Config_BalancingConfig_DEFAULT (const pb_byte_t*)"\x0d\x9a\x99\x19\x3e\x15\x00\x00\x70\x41\x18\x0f\x20\x28\x28\x0e\x30\xac\x02\x3d\x00\x00\x80\x3f\x40\xac\x02\x4d\x9a\x99\x19\x3e\x50\x02\x5d\x0a\xd7\xa3\x3c\x60\x00\x6d\x00\x00\x00\x00\x00"
 
-#define Config_PusbackSettings_FIELDLIST(X, a) \
-X(a, STATIC,   REQUIRED, INT32,    min_speed_erpm,    1) \
-X(a, STATIC,   REQUIRED, INT32,    push_angle,        2) \
-X(a, STATIC,   REQUIRED, FLOAT,    push_raise_speed_deg_sec,   3) \
-X(a, STATIC,   REQUIRED, FLOAT,    push_release_speed_deg_sec,   4)
-#define Config_PusbackSettings_CALLBACK NULL
-#define Config_PusbackSettings_DEFAULT (const pb_byte_t*)"\x08\xe8\x07\x10\x05\x1d\x00\x00\x00\x3f\x25\xcd\xcc\x4c\x3e\x00"
-
 #define Config_Misc_FIELDLIST(X, a) \
 X(a, STATIC,   OPTIONAL, INT32,    motor1_dir,        1) \
 X(a, STATIC,   OPTIONAL, INT32,    motor2_dir,        2) \
 X(a, STATIC,   REQUIRED, FLOAT,    throttle_rc,       6) \
-X(a, STATIC,   REQUIRED, FLOAT,    stop_wheel_signal_p,   7) \
-X(a, STATIC,   OPTIONAL, FLOAT,    duty_threshold,    8) \
-X(a, STATIC,   OPTIONAL, FLOAT,    duty_rc,           9) \
-X(a, STATIC,   OPTIONAL, INT32,    erpm_threshold,   10) \
-X(a, STATIC,   OPTIONAL, FLOAT,    erpm_rc,          11) \
-X(a, STATIC,   OPTIONAL, FLOAT,    low_volt_threshold,  12) \
-X(a, STATIC,   OPTIONAL, FLOAT,    volt_rc,          13) \
-X(a, STATIC,   OPTIONAL, FLOAT,    speed_input_mixin,  14)
+X(a, STATIC,   REQUIRED, FLOAT,    stop_wheel_signal_p,   7)
 #define Config_Misc_CALLBACK NULL
-#define Config_Misc_DEFAULT (const pb_byte_t*)"\x08\x01\x10\x01\x35\x17\xb7\xd1\x38\x3d\x00\x00\x00\x00\x45\x00\x00\x40\x3f\x4d\x00\x00\x80\x3e\x50\xf0\x2e\x5d\x00\x00\x80\x3e\x65\x00\x00\x34\x42\x6d\x00\x00\x80\x3e\x75\x00\x00\x00\x00\x00"
+#define Config_Misc_DEFAULT (const pb_byte_t*)"\x08\x01\x10\x01\x35\x17\xb7\xd1\x38\x3d\x00\x00\x00\x00\x00"
 
 extern const pb_msgdesc_t Config_msg;
 extern const pb_msgdesc_t Config_Callibration_msg;
 extern const pb_msgdesc_t Config_PidConfig_msg;
 extern const pb_msgdesc_t Config_FootPadSettings_msg;
 extern const pb_msgdesc_t Config_BalancingConfig_msg;
-extern const pb_msgdesc_t Config_PusbackSettings_msg;
 extern const pb_msgdesc_t Config_Misc_msg;
 
 /* Defines for backwards compatibility with code written before nanopb-0.4.0 */
@@ -264,17 +209,15 @@ extern const pb_msgdesc_t Config_Misc_msg;
 #define Config_PidConfig_fields &Config_PidConfig_msg
 #define Config_FootPadSettings_fields &Config_FootPadSettings_msg
 #define Config_BalancingConfig_fields &Config_BalancingConfig_msg
-#define Config_PusbackSettings_fields &Config_PusbackSettings_msg
 #define Config_Misc_fields &Config_Misc_msg
 
 /* Maximum encoded size of messages (where known) */
 #define Config_BalancingConfig_size              102
 #define Config_Callibration_size                 15
 #define Config_FootPadSettings_size              38
-#define Config_Misc_size                         73
+#define Config_Misc_size                         32
 #define Config_PidConfig_size                    25
-#define Config_PusbackSettings_size              32
-#define Config_size                              351
+#define Config_size                              276
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -23,27 +23,16 @@ message Config {
 
   required PidConfig yaw_pid = 8;
 
-  message FootPadSettings {
-    required float filter_rc = 1 [ default = 0.05 ];
-    required int32 min_level_to_start = 2 [ default = 3300 ];
-    required int32 min_level_to_continue = 3 [ default = 2000 ];
-    required int32 shutoff_delay_ms = 4 [ default = 100 ];
-  }
-
-  required FootPadSettings foot_pad = 3;
-
   message BalancingConfig {
     // min value is 1 = linear
     required float balance_expo = 1 [ default = 0.15 ];
+    // 0 - exponential, 1 natural, 2 - poly
+    optional int32 expo_type = 12 [ default = 0 ];
 
-    // scale input angel in deg by deviding by 'balance_angle_scaling'
-    required float balance_angle_scaling = 2 [ default = 15 ];
+    optional int32 max_start_angle = 3 [ default = 4 ];
 
-    required int32 max_start_angle_steer = 3 [ default = 15 ];
-    required int32 shutoff_angle_steer = 4 [ default = 40 ];
-    required int32 shutoff_angle_drive = 5 [ default = 14 ];
+    required int32 shutoff_angle = 5 [ default = 15 ];
 
-    required int32 max_update_limiter = 6 [ default = 300 ];
     required float output_lpf_rc = 7 [ default = 1 ];
 
     required int32 balance_d_param_limiter = 8 [ default = 300 ];
@@ -63,25 +52,19 @@ message Config {
     required uint32 global_gyro_lpf = 10 [ default = 2 ];
 
     optional float imu_beta = 11 [ default = 0.02 ];
-
-    // 0 - exponential, 1 natural, 2 - poly
-    optional int32 expo_type = 12 [ default = 0 ];
-
-    // If non-zero, balance controler sends current control requests via usart
-    // (keep PPM wire disconnected.)
-    optional float usart_control_scaling = 13 [ default = 0 ];
   }
 
   required BalancingConfig balance_settings = 4;
   
   message Misc {
-    // 0-1, 1 = 100% of output power = no warning at all
-    required float stop_wheel_signal_p = 7 [ default = 0 ];
-    required float throttle_rc = 6 [ default = 0.0001 ];
-
     // the values are 1 or -1
     optional int32 motor1_dir = 1 [ default = 1 ];
     optional int32 motor2_dir = 2 [ default = 1 ];
+    optional int32 motor3_dir = 3 [ default = 1 ];
+
+    // 0-1, 1 = 100% of output power = no warning at all
+    required float stop_wheel_signal_p = 7 [ default = 0 ];
+    required float throttle_rc = 6 [ default = 0.0001 ];
   }
   
   required Misc misc = 5;

@@ -16,8 +16,10 @@ void BoardController::processUpdate(const MpuUpdate& update) {
     case State::Stopped:
       motor1_.Set(0);
       motor2_.Set(0);
+      motor3_.Set(0);
       motor1_out_lpf_.reset();
       motor2_out_lpf_.reset();
+      motor3_out_lpf_.reset();
 
       status_led_.setState(0);
       beeper_.setState(0);
@@ -26,8 +28,10 @@ void BoardController::processUpdate(const MpuUpdate& update) {
     case State::FirstIteration:
       motor1_.Set(0);
       motor2_.Set(0);
+      motor3_.Set(0);
       motor1_out_lpf_.reset();
       motor2_out_lpf_.reset();
+      motor3_out_lpf_.reset();
 
       fwd_lpf_.reset();
       right_lpf_.reset();
@@ -69,8 +73,17 @@ void BoardController::processUpdate(const MpuUpdate& update) {
       fwd_lpf_.compute(fwd);
       right_lpf_.compute(right);
 
-      motor1_.Set(motor1_out_lpf_.compute(fwd) * settings_->misc.motor1_dir);
-      motor2_.Set(motor2_out_lpf_.compute(right) * settings_->misc.motor2_dir );
+      const float yaw = 0;
+    
+      // blue side of the cube is facing fwd
+			float pwm1 = yaw + cos(deg_to_rad(120)) * right - sin(deg_to_rad(120)) * fwd;
+		  float pwm2 = yaw + cos(deg_to_rad(120)) * right + sin(deg_to_rad(120)) * fwd;
+      float pwm3 = yaw + right;
+
+      motor1_.Set(motor1_out_lpf_.compute(pwm1) * settings_->misc.motor1_dir);
+      motor2_.Set(motor2_out_lpf_.compute(pwm2) * settings_->misc.motor2_dir);
+      
+      motor3_.Set(motor3_out_lpf_.compute(pwm3) * settings_->misc.motor3_dir);
       break;
   }
 }

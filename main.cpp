@@ -23,7 +23,6 @@
 #include "drv/settings/settings.hpp"
 #include "global.h"
 #include "guards/angleGuard.hpp"
-#include "guards/footpadGuard.hpp"
 #include "imu/imu.hpp"
 #include "io/genericOut.hpp"
 #include "io/i2c.hpp"
@@ -192,12 +191,17 @@ int main(void) {
   PwmOut pwm2(2);
   pwm2.set(500);
 
+  PwmOut pwm3(3);
+  pwm3.set(500);
+
   GenericOut dir1(RCC_APB2Periph_GPIOB, GPIOB, GPIO_Pin_7, false);
   dir1.init();
 
   GenericOut dir2(RCC_APB2Periph_GPIOB, GPIOB, GPIO_Pin_8, false);
   dir2.init();
 
+  GenericOut dir3(RCC_APB2Periph_GPIOB, GPIOB, GPIO_Pin_9, false);
+  dir3.init();
 
   IMU imu(&cfg);
   AngleGuard angle_guard(imu, &cfg.balance_settings);
@@ -221,12 +225,11 @@ int main(void) {
   //	GenericOut debug_out(RCC_APB2Periph_GPIOA, GPIOA, GPIO_Pin_11, false);
   //	debug_out.init();
 
-  FootpadGuard foot_pad_guard(&cfg.foot_pad);
   Guard *guards[] = {&angle_guard};
   int guards_count = sizeof(guards) / sizeof(Guard *);
 
   static BoardController main_ctrl(&cfg, imu, status_led, beeper, guards,
-                            guards_count, green_led, &pmw1, &dir1, &pwm2, &dir2);
+                            guards_count, green_led, &pmw1, &dir1, &pwm2, &dir2, &pwm3, &dir3);
 
   accGyro.setListener(&main_ctrl);
 

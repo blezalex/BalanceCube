@@ -44,7 +44,7 @@ class BoardController : public UpdateListener {
   BoardController(Config* settings, IMU& imu, GenericOut& status_led,
                   GenericOut& beeper, Guard** guards, int guards_count,
                   GenericOut& green_led, PwmOut* pwm1, GenericOut* dir1,
-                  PwmOut* pwm2, GenericOut* dir2)
+                  PwmOut* pwm2, GenericOut* dir2, PwmOut* pwm3, GenericOut* dir3)
       : settings_(settings),
         imu_(imu),
         state_(guards, guards_count),
@@ -58,8 +58,10 @@ class BoardController : public UpdateListener {
         right_lpf_(&settings->misc.throttle_rc),
         motor1_(pwm1, dir1),
         motor2_(pwm2, dir2),
+				motor3_(pwm3, dir3),
         motor1_out_lpf_(&(settings_->balance_settings.output_lpf_rc)),
-        motor2_out_lpf_(&(settings_->balance_settings.output_lpf_rc)) {}
+        motor2_out_lpf_(&(settings_->balance_settings.output_lpf_rc)),
+				motor3_out_lpf_(&(settings_->balance_settings.output_lpf_rc)) {}
 
 
   // Main control loop. Runs at 1000hz Must finish in less than 1ms otherwise
@@ -91,4 +93,7 @@ class BoardController : public UpdateListener {
 
   MotorController motor2_;
   BiQuadLpf motor2_out_lpf_;
+
+	MotorController motor3_;
+  BiQuadLpf motor3_out_lpf_;
 };

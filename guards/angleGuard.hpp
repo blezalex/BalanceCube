@@ -11,12 +11,12 @@ public:
 	}
 
 	bool CanStart() {
-		return abs(imu_.angles[ANGLE_STEER]) < balance_settings_->max_start_angle_steer && abs(imu_.angles[ANGLE_DRIVE]) < START_ANGLE_DRIVE;
+		return abs(imu_.angles[ANGLE_STEER]) < balance_settings_->max_start_angle && abs(imu_.angles[ANGLE_DRIVE]) < balance_settings_->max_start_angle;
 	}
 
 	bool MustStop() {
-		return abs(imu_.angles[ANGLE_DRIVE]) > balance_settings_->shutoff_angle_drive  // back/forward tilt too high (accelerate/stop angle)
-						|| abs(imu_.angles[ANGLE_STEER]) > balance_settings_->shutoff_angle_steer; // left/right tilt is too high
+		return abs(imu_.angles[ANGLE_DRIVE]) > balance_settings_->shutoff_angle
+						|| abs(imu_.angles[ANGLE_STEER]) > balance_settings_->shutoff_angle;
 	}
 
 private:

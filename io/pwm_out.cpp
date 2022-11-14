@@ -18,7 +18,7 @@ void PwmOut::InitAll() {
 	TIM_TimeBaseInitTypeDef TimerBaseInit;
 	TIM_TimeBaseStructInit(&TimerBaseInit);
 
-	TimerBaseInit.TIM_Prescaler =  SystemCoreClock / 10000000 - 1; // 0.1us tick // 7.2 rounded to 7
+	TimerBaseInit.TIM_Prescaler =  SystemCoreClock / 10000000 - 1; // 0.1us tick - 7.2 rounded to 7
 	TimerBaseInit.TIM_Period = 500; // 20.6kHz
 	TimerBaseInit.TIM_CounterMode = TIM_CounterMode_Up;
 	TimerBaseInit.TIM_ClockDivision = TIM_CKD_DIV1;
@@ -28,7 +28,7 @@ void PwmOut::InitAll() {
 	TIM_OCInitTypeDef OC_Config;
 	TIM_OCStructInit(&OC_Config);
 	OC_Config.TIM_OCMode = TIM_OCMode_PWM1;
-	OC_Config.TIM_Pulse = 1500;
+	OC_Config.TIM_Pulse = 500;
 	OC_Config.TIM_OutputState = TIM_OutputState_Enable;
 	OC_Config.TIM_OCPolarity = TIM_OCPolarity_High;
 	TIM_OC1Init(TIM1, &OC_Config);
@@ -48,8 +48,8 @@ void PwmOut::InitAll() {
 
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
 	TIM_TimeBaseStructInit(&TimerBaseInit);
-	TimerBaseInit.TIM_Prescaler =  SystemCoreClock / 1000000 - 1; // 1us tick ;
-	TimerBaseInit.TIM_Period = 2500; // 400hz
+	TimerBaseInit.TIM_Prescaler =  SystemCoreClock / 10000000 - 1; // 0.1us tick - 7.2 rounded to 7
+	TimerBaseInit.TIM_Period = 500; // 20.6kHz
 	TimerBaseInit.TIM_CounterMode = TIM_CounterMode_Up;
 	TimerBaseInit.TIM_ClockDivision = TIM_CKD_DIV1;
 	TIM_TimeBaseInit(TIM4,&TimerBaseInit);
@@ -57,14 +57,14 @@ void PwmOut::InitAll() {
 
 	TIM_OCStructInit(&OC_Config);
 	OC_Config.TIM_OCMode = TIM_OCMode_PWM1;
-	OC_Config.TIM_Pulse = 1500;
+	OC_Config.TIM_Pulse = 500;
 	OC_Config.TIM_OutputState = TIM_OutputState_Enable;
 	OC_Config.TIM_OCPolarity = TIM_OCPolarity_High;
 	TIM_OC1Init(TIM4, &OC_Config);
 	TIM_OC1PreloadConfig(TIM4, TIM_OCPreload_Enable);
 
-	TIM_OC2Init(TIM4, &OC_Config);
-	TIM_OC2PreloadConfig(TIM4, TIM_OCPreload_Enable);
+	// TIM_OC2Init(TIM4, &OC_Config);
+	// TIM_OC2PreloadConfig(TIM4, TIM_OCPreload_Enable);
 }
 
 void PwmOut::set(uint16_t val) {

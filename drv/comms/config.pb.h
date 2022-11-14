@@ -12,11 +12,9 @@
 /* Struct definitions */
 typedef struct _Config_BalancingConfig { 
     float balance_expo; 
-    float balance_angle_scaling; 
-    int32_t max_start_angle_steer; 
-    int32_t shutoff_angle_steer; 
-    int32_t shutoff_angle_drive; 
-    int32_t max_update_limiter; 
+    bool has_max_start_angle;
+    int32_t max_start_angle; 
+    int32_t shutoff_angle; 
     float output_lpf_rc; 
     int32_t balance_d_param_limiter; 
     float balance_d_param_lpf_rc; 
@@ -25,8 +23,6 @@ typedef struct _Config_BalancingConfig {
     float imu_beta; 
     bool has_expo_type;
     int32_t expo_type; 
-    bool has_usart_control_scaling;
-    float usart_control_scaling; 
 } Config_BalancingConfig;
 
 typedef struct _Config_Callibration { 
@@ -35,18 +31,13 @@ typedef struct _Config_Callibration {
     float z_offset; 
 } Config_Callibration;
 
-typedef struct _Config_FootPadSettings { 
-    float filter_rc; 
-    int32_t min_level_to_start; 
-    int32_t min_level_to_continue; 
-    int32_t shutoff_delay_ms; 
-} Config_FootPadSettings;
-
 typedef struct _Config_Misc { 
     bool has_motor1_dir;
     int32_t motor1_dir; 
     bool has_motor2_dir;
     int32_t motor2_dir; 
+    bool has_motor3_dir;
+    int32_t motor3_dir; 
     float throttle_rc; 
     float stop_wheel_signal_p; 
 } Config_Misc;
@@ -64,7 +55,6 @@ typedef struct _Config {
     bool has_callibration;
     Config_Callibration callibration; 
     Config_PidConfig angle_pid; 
-    Config_FootPadSettings foot_pad; 
     Config_BalancingConfig balance_settings; 
     Config_Misc misc; 
     Config_PidConfig yaw_pid; 
@@ -77,42 +67,33 @@ extern "C" {
 #endif
 
 /* Initializer values for message structs */
-#define Config_init_default                      {false, Config_Callibration_init_default, Config_PidConfig_init_default, Config_FootPadSettings_init_default, Config_BalancingConfig_init_default, Config_Misc_init_default, Config_PidConfig_init_default, Config_PidConfig_init_default}
+#define Config_init_default                      {false, Config_Callibration_init_default, Config_PidConfig_init_default, Config_BalancingConfig_init_default, Config_Misc_init_default, Config_PidConfig_init_default, Config_PidConfig_init_default}
 #define Config_Callibration_init_default         {0.0f, 0.0f, 0.0f}
 #define Config_PidConfig_init_default            {0.0f, 0.0f, 0.0f, 0.0f, false, 0.0f}
-#define Config_FootPadSettings_init_default      {0.05f, 3300, 2000, 100}
-#define Config_BalancingConfig_init_default      {0.15f, 15.0f, 15, 40, 14, 300, 1.0f, 300, 0.15f, 2u, false, 0.02f, false, 0, false, 0.0f}
-#define Config_Misc_init_default                 {false, 1, false, 1, 0.0001f, 0.0f}
-#define Config_init_zero                         {false, Config_Callibration_init_zero, Config_PidConfig_init_zero, Config_FootPadSettings_init_zero, Config_BalancingConfig_init_zero, Config_Misc_init_zero, Config_PidConfig_init_zero, Config_PidConfig_init_zero}
+#define Config_BalancingConfig_init_default      {0.15f, false, 4, 15, 1.0f, 300, 0.15f, 2u, false, 0.02f, false, 0}
+#define Config_Misc_init_default                 {false, 1, false, 1, false, 1, 0.0001f, 0.0f}
+#define Config_init_zero                         {false, Config_Callibration_init_zero, Config_PidConfig_init_zero, Config_BalancingConfig_init_zero, Config_Misc_init_zero, Config_PidConfig_init_zero, Config_PidConfig_init_zero}
 #define Config_Callibration_init_zero            {0, 0, 0}
 #define Config_PidConfig_init_zero               {0, 0, 0, 0, false, 0}
-#define Config_FootPadSettings_init_zero         {0, 0, 0, 0}
-#define Config_BalancingConfig_init_zero         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, false, 0, false, 0, false, 0}
-#define Config_Misc_init_zero                    {false, 0, false, 0, 0, 0}
+#define Config_BalancingConfig_init_zero         {0, false, 0, 0, 0, 0, 0, 0, false, 0, false, 0}
+#define Config_Misc_init_zero                    {false, 0, false, 0, false, 0, 0, 0}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define Config_BalancingConfig_balance_expo_tag  1
-#define Config_BalancingConfig_balance_angle_scaling_tag 2
-#define Config_BalancingConfig_max_start_angle_steer_tag 3
-#define Config_BalancingConfig_shutoff_angle_steer_tag 4
-#define Config_BalancingConfig_shutoff_angle_drive_tag 5
-#define Config_BalancingConfig_max_update_limiter_tag 6
+#define Config_BalancingConfig_max_start_angle_tag 3
+#define Config_BalancingConfig_shutoff_angle_tag 5
 #define Config_BalancingConfig_output_lpf_rc_tag 7
 #define Config_BalancingConfig_balance_d_param_limiter_tag 8
 #define Config_BalancingConfig_balance_d_param_lpf_rc_tag 9
 #define Config_BalancingConfig_global_gyro_lpf_tag 10
 #define Config_BalancingConfig_imu_beta_tag      11
 #define Config_BalancingConfig_expo_type_tag     12
-#define Config_BalancingConfig_usart_control_scaling_tag 13
 #define Config_Callibration_x_offset_tag         4
 #define Config_Callibration_y_offset_tag         5
 #define Config_Callibration_z_offset_tag         6
-#define Config_FootPadSettings_filter_rc_tag     1
-#define Config_FootPadSettings_min_level_to_start_tag 2
-#define Config_FootPadSettings_min_level_to_continue_tag 3
-#define Config_FootPadSettings_shutoff_delay_ms_tag 4
 #define Config_Misc_motor1_dir_tag               1
 #define Config_Misc_motor2_dir_tag               2
+#define Config_Misc_motor3_dir_tag               3
 #define Config_Misc_throttle_rc_tag              6
 #define Config_Misc_stop_wheel_signal_p_tag      7
 #define Config_PidConfig_p_tag                   1
@@ -122,7 +103,6 @@ extern "C" {
 #define Config_PidConfig_i_expo_tag              13
 #define Config_callibration_tag                  1
 #define Config_angle_pid_tag                     2
-#define Config_foot_pad_tag                      3
 #define Config_balance_settings_tag              4
 #define Config_misc_tag                          5
 #define Config_yaw_pid_tag                       8
@@ -132,7 +112,6 @@ extern "C" {
 #define Config_FIELDLIST(X, a) \
 X(a, STATIC,   OPTIONAL, MESSAGE,  callibration,      1) \
 X(a, STATIC,   REQUIRED, MESSAGE,  angle_pid,         2) \
-X(a, STATIC,   REQUIRED, MESSAGE,  foot_pad,          3) \
 X(a, STATIC,   REQUIRED, MESSAGE,  balance_settings,   4) \
 X(a, STATIC,   REQUIRED, MESSAGE,  misc,              5) \
 X(a, STATIC,   REQUIRED, MESSAGE,  yaw_pid,           8) \
@@ -141,7 +120,6 @@ X(a, STATIC,   REQUIRED, MESSAGE,  rate_pid,          9)
 #define Config_DEFAULT NULL
 #define Config_callibration_MSGTYPE Config_Callibration
 #define Config_angle_pid_MSGTYPE Config_PidConfig
-#define Config_foot_pad_MSGTYPE Config_FootPadSettings
 #define Config_balance_settings_MSGTYPE Config_BalancingConfig
 #define Config_misc_MSGTYPE Config_Misc
 #define Config_yaw_pid_MSGTYPE Config_PidConfig
@@ -163,43 +141,31 @@ X(a, STATIC,   OPTIONAL, FLOAT,    i_expo,           13)
 #define Config_PidConfig_CALLBACK NULL
 #define Config_PidConfig_DEFAULT (const pb_byte_t*)"\x0d\x00\x00\x00\x00\x15\x00\x00\x00\x00\x1d\x00\x00\x00\x00\x25\x00\x00\x00\x00\x6d\x00\x00\x00\x00\x00"
 
-#define Config_FootPadSettings_FIELDLIST(X, a) \
-X(a, STATIC,   REQUIRED, FLOAT,    filter_rc,         1) \
-X(a, STATIC,   REQUIRED, INT32,    min_level_to_start,   2) \
-X(a, STATIC,   REQUIRED, INT32,    min_level_to_continue,   3) \
-X(a, STATIC,   REQUIRED, INT32,    shutoff_delay_ms,   4)
-#define Config_FootPadSettings_CALLBACK NULL
-#define Config_FootPadSettings_DEFAULT (const pb_byte_t*)"\x0d\xcd\xcc\x4c\x3d\x10\xe4\x19\x18\xd0\x0f\x20\x64\x00"
-
 #define Config_BalancingConfig_FIELDLIST(X, a) \
 X(a, STATIC,   REQUIRED, FLOAT,    balance_expo,      1) \
-X(a, STATIC,   REQUIRED, FLOAT,    balance_angle_scaling,   2) \
-X(a, STATIC,   REQUIRED, INT32,    max_start_angle_steer,   3) \
-X(a, STATIC,   REQUIRED, INT32,    shutoff_angle_steer,   4) \
-X(a, STATIC,   REQUIRED, INT32,    shutoff_angle_drive,   5) \
-X(a, STATIC,   REQUIRED, INT32,    max_update_limiter,   6) \
+X(a, STATIC,   OPTIONAL, INT32,    max_start_angle,   3) \
+X(a, STATIC,   REQUIRED, INT32,    shutoff_angle,     5) \
 X(a, STATIC,   REQUIRED, FLOAT,    output_lpf_rc,     7) \
 X(a, STATIC,   REQUIRED, INT32,    balance_d_param_limiter,   8) \
 X(a, STATIC,   REQUIRED, FLOAT,    balance_d_param_lpf_rc,   9) \
 X(a, STATIC,   REQUIRED, UINT32,   global_gyro_lpf,  10) \
 X(a, STATIC,   OPTIONAL, FLOAT,    imu_beta,         11) \
-X(a, STATIC,   OPTIONAL, INT32,    expo_type,        12) \
-X(a, STATIC,   OPTIONAL, FLOAT,    usart_control_scaling,  13)
+X(a, STATIC,   OPTIONAL, INT32,    expo_type,        12)
 #define Config_BalancingConfig_CALLBACK NULL
-#define Config_BalancingConfig_DEFAULT (const pb_byte_t*)"\x0d\x9a\x99\x19\x3e\x15\x00\x00\x70\x41\x18\x0f\x20\x28\x28\x0e\x30\xac\x02\x3d\x00\x00\x80\x3f\x40\xac\x02\x4d\x9a\x99\x19\x3e\x50\x02\x5d\x0a\xd7\xa3\x3c\x60\x00\x6d\x00\x00\x00\x00\x00"
+#define Config_BalancingConfig_DEFAULT (const pb_byte_t*)"\x0d\x9a\x99\x19\x3e\x18\x04\x28\x0f\x3d\x00\x00\x80\x3f\x40\xac\x02\x4d\x9a\x99\x19\x3e\x50\x02\x5d\x0a\xd7\xa3\x3c\x60\x00\x00"
 
 #define Config_Misc_FIELDLIST(X, a) \
 X(a, STATIC,   OPTIONAL, INT32,    motor1_dir,        1) \
 X(a, STATIC,   OPTIONAL, INT32,    motor2_dir,        2) \
+X(a, STATIC,   OPTIONAL, INT32,    motor3_dir,        3) \
 X(a, STATIC,   REQUIRED, FLOAT,    throttle_rc,       6) \
 X(a, STATIC,   REQUIRED, FLOAT,    stop_wheel_signal_p,   7)
 #define Config_Misc_CALLBACK NULL
-#define Config_Misc_DEFAULT (const pb_byte_t*)"\x08\x01\x10\x01\x35\x17\xb7\xd1\x38\x3d\x00\x00\x00\x00\x00"
+#define Config_Misc_DEFAULT (const pb_byte_t*)"\x08\x01\x10\x01\x18\x01\x35\x17\xb7\xd1\x38\x3d\x00\x00\x00\x00\x00"
 
 extern const pb_msgdesc_t Config_msg;
 extern const pb_msgdesc_t Config_Callibration_msg;
 extern const pb_msgdesc_t Config_PidConfig_msg;
-extern const pb_msgdesc_t Config_FootPadSettings_msg;
 extern const pb_msgdesc_t Config_BalancingConfig_msg;
 extern const pb_msgdesc_t Config_Misc_msg;
 
@@ -207,17 +173,15 @@ extern const pb_msgdesc_t Config_Misc_msg;
 #define Config_fields &Config_msg
 #define Config_Callibration_fields &Config_Callibration_msg
 #define Config_PidConfig_fields &Config_PidConfig_msg
-#define Config_FootPadSettings_fields &Config_FootPadSettings_msg
 #define Config_BalancingConfig_fields &Config_BalancingConfig_msg
 #define Config_Misc_fields &Config_Misc_msg
 
 /* Maximum encoded size of messages (where known) */
-#define Config_BalancingConfig_size              102
+#define Config_BalancingConfig_size              70
 #define Config_Callibration_size                 15
-#define Config_FootPadSettings_size              38
-#define Config_Misc_size                         32
+#define Config_Misc_size                         43
 #define Config_PidConfig_size                    25
-#define Config_size                              276
+#define Config_size                              215
 
 #ifdef __cplusplus
 } /* extern "C" */

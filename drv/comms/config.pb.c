@@ -15,9 +15,6 @@ PB_BIND(Config_Callibration, Config_Callibration, AUTO)
 PB_BIND(Config_PidConfig, Config_PidConfig, AUTO)
 
 
-PB_BIND(Config_FootPadSettings, Config_FootPadSettings, AUTO)
-
-
 PB_BIND(Config_BalancingConfig, Config_BalancingConfig, AUTO)
 
 

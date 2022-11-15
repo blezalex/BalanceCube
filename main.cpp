@@ -321,7 +321,8 @@ int main(void) {
         stats.stear_angle = imu.angles[ANGLE_STEER];
         stats.pad_pressure1 = main_ctrl.right;
         stats.pad_pressure1 = main_ctrl.fwd;
-        stats.batt_current = main_ctrl.motor1_out_lpf_.getVal();
+        stats.batt_current = main_ctrl.fwdTargetAngle_;
+        stats.batt_voltage = main_ctrl.rightTargetAngle_;
 
         int16_t data_len =
             saveProtoToBuffer(scratch, sizeof(scratch), Stats_fields, &stats);

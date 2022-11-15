@@ -54,8 +54,9 @@ class BoardController : public UpdateListener {
         status_led_(status_led),
         beeper_(beeper),
         green_led_(green_led),
-        fwd_lpf_(&settings->misc.throttle_rc),
-        right_lpf_(&settings->misc.throttle_rc),
+        m1_speed_lpf_(&settings->misc.throttle_rc),
+        m2_speed_lpf_(&settings->misc.throttle_rc),
+        m3_speed_lpf_(&settings->misc.throttle_rc),
         motor1_(pwm1, dir1),
         motor2_(pwm2, dir2),
 				motor3_(pwm3, dir3),
@@ -67,6 +68,8 @@ class BoardController : public UpdateListener {
   // Main control loop. Runs at 1000hz Must finish in less than 1ms otherwise
   // controller will freeze.
   void processUpdate(const MpuUpdate& update);
+
+  void Reset();
 
  public:
   float fwd;
@@ -84,9 +87,10 @@ class BoardController : public UpdateListener {
 
   GenericOut& green_led_;
 
-  // These lpfs compensate for body inertia.
-  BiQuadLpf fwd_lpf_;
-  BiQuadLpf right_lpf_;
+  // These are used to estimate motor actual speed
+  BiQuadLpf m1_speed_lpf_;
+  BiQuadLpf m2_speed_lpf_;
+  BiQuadLpf m3_speed_lpf_;
 
   MotorController motor1_;
   BiQuadLpf motor1_out_lpf_;
@@ -96,4 +100,7 @@ class BoardController : public UpdateListener {
 
 	MotorController motor3_;
   BiQuadLpf motor3_out_lpf_;
+
+  float fwdTargetAngle_;
+  float rightTargetAngle_;
 };

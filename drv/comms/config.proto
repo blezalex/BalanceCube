@@ -65,6 +65,8 @@ message Config {
     // 0-1, 1 = 100% of output power = no warning at all
     required float stop_wheel_signal_p = 7 [ default = 0 ];
     required float throttle_rc = 6 [ default = 0.0001 ];
+
+    optional float yaw_target = 4 [ default = 0 ];
   }
   
   required Misc misc = 5;

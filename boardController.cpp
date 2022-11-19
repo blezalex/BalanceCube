@@ -83,7 +83,8 @@ void BoardController::processUpdate(const MpuUpdate& update) {
                                        -update.gyro[0]);
       }
 
-      const float yaw = 0;
+      float yaw_target = settings_->misc.yaw_target;
+			float yaw = yaw_pid_controler_.compute(update.gyro[2] - yaw_target)  * state_.start_progress();
     
       // blue side of the cube is facing fwd
 			const float pwm1 = yaw + cos(deg_to_rad(120)) * right - sin(deg_to_rad(120)) * fwd;

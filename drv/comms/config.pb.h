@@ -38,6 +38,8 @@ typedef struct _Config_Misc {
     int32_t motor2_dir; 
     bool has_motor3_dir;
     int32_t motor3_dir; 
+    bool has_yaw_target;
+    float yaw_target; 
     float throttle_rc; 
     float stop_wheel_signal_p; 
 } Config_Misc;
@@ -71,12 +73,12 @@ extern "C" {
 #define Config_Callibration_init_default         {0.0f, 0.0f, 0.0f}
 #define Config_PidConfig_init_default            {0.0f, 0.0f, 0.0f, 0.0f, false, 0.0f}
 #define Config_BalancingConfig_init_default      {0.15f, false, 4, 15, 1.0f, 300, 0.15f, 2u, false, 0.02f, false, 0}
-#define Config_Misc_init_default                 {false, 1, false, 1, false, 1, 0.0001f, 0.0f}
+#define Config_Misc_init_default                 {false, 1, false, 1, false, 1, false, 0.0f, 0.0001f, 0.0f}
 #define Config_init_zero                         {false, Config_Callibration_init_zero, Config_PidConfig_init_zero, Config_BalancingConfig_init_zero, Config_Misc_init_zero, Config_PidConfig_init_zero, Config_PidConfig_init_zero}
 #define Config_Callibration_init_zero            {0, 0, 0}
 #define Config_PidConfig_init_zero               {0, 0, 0, 0, false, 0}
 #define Config_BalancingConfig_init_zero         {0, false, 0, 0, 0, 0, 0, 0, false, 0, false, 0}
-#define Config_Misc_init_zero                    {false, 0, false, 0, false, 0, 0, 0}
+#define Config_Misc_init_zero                    {false, 0, false, 0, false, 0, false, 0, 0, 0}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define Config_BalancingConfig_balance_expo_tag  1
@@ -94,6 +96,7 @@ extern "C" {
 #define Config_Misc_motor1_dir_tag               1
 #define Config_Misc_motor2_dir_tag               2
 #define Config_Misc_motor3_dir_tag               3
+#define Config_Misc_yaw_target_tag               4
 #define Config_Misc_throttle_rc_tag              6
 #define Config_Misc_stop_wheel_signal_p_tag      7
 #define Config_PidConfig_p_tag                   1
@@ -158,10 +161,11 @@ X(a, STATIC,   OPTIONAL, INT32,    expo_type,        12)
 X(a, STATIC,   OPTIONAL, INT32,    motor1_dir,        1) \
 X(a, STATIC,   OPTIONAL, INT32,    motor2_dir,        2) \
 X(a, STATIC,   OPTIONAL, INT32,    motor3_dir,        3) \
+X(a, STATIC,   OPTIONAL, FLOAT,    yaw_target,        4) \
 X(a, STATIC,   REQUIRED, FLOAT,    throttle_rc,       6) \
 X(a, STATIC,   REQUIRED, FLOAT,    stop_wheel_signal_p,   7)
 #define Config_Misc_CALLBACK NULL
-#define Config_Misc_DEFAULT (const pb_byte_t*)"\x08\x01\x10\x01\x18\x01\x35\x17\xb7\xd1\x38\x3d\x00\x00\x00\x00\x00"
+#define Config_Misc_DEFAULT (const pb_byte_t*)"\x08\x01\x10\x01\x18\x01\x25\x00\x00\x00\x00\x35\x17\xb7\xd1\x38\x3d\x00\x00\x00\x00\x00"
 
 extern const pb_msgdesc_t Config_msg;
 extern const pb_msgdesc_t Config_Callibration_msg;
@@ -179,9 +183,9 @@ extern const pb_msgdesc_t Config_Misc_msg;
 /* Maximum encoded size of messages (where known) */
 #define Config_BalancingConfig_size              70
 #define Config_Callibration_size                 15
-#define Config_Misc_size                         43
+#define Config_Misc_size                         48
 #define Config_PidConfig_size                    25
-#define Config_size                              215
+#define Config_size                              220
 
 #ifdef __cplusplus
 } /* extern "C" */

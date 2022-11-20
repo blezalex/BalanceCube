@@ -1,0 +1,45 @@
+callibration {
+  x_offset: -3.0
+  y_offset: -1.0
+  z_offset: 0.0
+}
+angle_pid {
+  p: 1.0
+  d: 0.0
+  i: 0.0
+  max_i: 3.0
+  i_expo: 0.0
+}
+balance_settings {
+  balance_expo: 0.15
+  max_start_angle: 1
+  shutoff_angle: 7
+  output_lpf_rc: 220.0
+  balance_d_param_limiter: 280
+  balance_d_param_lpf_rc: 0.15
+  global_gyro_lpf: 2
+  imu_beta: 0.02
+  expo_type: 0
+}
+misc {
+  motor1_dir: 1
+  motor2_dir: 1
+  motor3_dir: 1
+  yaw_target: 400.0
+  throttle_rc: 3.5E-4
+  stop_wheel_signal_p: -1.6
+}
+yaw_pid {
+  p: -0.001
+  d: 0.0
+  i: 0.0
+  max_i: 0.0
+  i_expo: 0.0
+}
+rate_pid {
+  p: 0.0035
+  d: 0.0
+  i: 0.0
+  max_i: 3.0
+  i_expo: 0.0
+}

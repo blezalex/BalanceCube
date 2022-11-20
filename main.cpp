@@ -28,7 +28,6 @@
 #include "io/i2c.hpp"
 #include "io/usart.hpp"
 #include "io/rx.h"
-#include "ledController.hpp"
 #include "lpf.hpp"
 #include "pid.hpp"
 #include "stateTracker.hpp"
@@ -216,7 +215,6 @@ int main(void) {
 
   initRx();
 
-  led_controller_init();
   waiter.waitForAccGyroCalibration();
 
   GenericOut green_led(RCC_APB2Periph_GPIOB, GPIOB, GPIO_Pin_3, true);
@@ -240,7 +238,6 @@ int main(void) {
   read_pos = 0;
   while (1) {  // background work
     IWDG_ReloadCounter();
-    led_controller_update();
 
     if ((uint16_t)(millis() - last_check_time) > 100u) {
       last_check_time = millis();

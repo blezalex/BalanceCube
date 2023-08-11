@@ -97,7 +97,6 @@ void BoardController::processUpdate(const MpuUpdate& update) {
 
       motor1_.Set(motor1_out_lpf_.compute(pwm1) * settings_->misc.motor1_dir);
       motor2_.Set(motor2_out_lpf_.compute(pwm2) * settings_->misc.motor2_dir);
-      
       motor3_.Set(motor3_out_lpf_.compute(pwm3) * settings_->misc.motor3_dir);
       break;
   }

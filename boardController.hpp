@@ -21,9 +21,11 @@
 
 class MotorController {
  public:
-  MotorController(PwmOut* pwm, GenericOut* dir) : pwm_(pwm), dir_(dir) {}
+  MotorController(PwmOut* pwm, GenericOut* dir, float* pwm_rc, float* pmw_cur) : pwm_(pwm), dir_(dir), speed_cur_lpf_(pwm_rc), pmw_cur_(pmw_cur) {}
 
   void Set(float cmd) {
+    cmd += speed_cur_lpf_.compute(cmd) * *pmw_cur_; 
+
     dir_->setState(cmd > 0);
 
     int16_t duty = fabsf(cmd) * 500;
@@ -37,6 +39,8 @@ class MotorController {
  private:
   PwmOut* pwm_;
   GenericOut* dir_;
+  LPF speed_cur_lpf_;
+  float* pmw_cur_;
 };
 
 class BoardController : public UpdateListener {
@@ -57,9 +61,9 @@ class BoardController : public UpdateListener {
         m1_speed_lpf_(&settings->misc.throttle_rc),
         m2_speed_lpf_(&settings->misc.throttle_rc),
         m3_speed_lpf_(&settings->misc.throttle_rc),
-        motor1_(pwm1, dir1),
-        motor2_(pwm2, dir2),
-				motor3_(pwm3, dir3),
+        motor1_(pwm1, dir1, &(settings_->misc.motor_pwm_rc), &(settings_->misc.motor_pwm_current)),
+        motor2_(pwm2, dir2, &(settings_->misc.motor_pwm_rc), &(settings_->misc.motor_pwm_current)),
+				motor3_(pwm3, dir3, &(settings_->misc.motor_pwm_rc), &(settings_->misc.motor_pwm_current)),
         motor1_out_lpf_(&(settings_->balance_settings.output_lpf_rc)),
         motor2_out_lpf_(&(settings_->balance_settings.output_lpf_rc)),
 				motor3_out_lpf_(&(settings_->balance_settings.output_lpf_rc)) {}

@@ -118,6 +118,20 @@ void initRx() {
 	NVIC_Init(&NVIC_InitStructure);
 }
 
+void initEncoders() {
+  GPIO_InitTypeDef  GPIO_InitStructure;
+	GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_0 | GPIO_Pin_1;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD;
+	GPIO_Init(GPIOB, &GPIO_InitStructure);
+    
+  GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_2 | GPIO_Pin_3 | GPIO_Pin_6 | GPIO_Pin_7;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD;
+	GPIO_Init(GPIOA, &GPIO_InitStructure);
+    // A2, A3, A6, A7, B0, B1
+}
+
 uint8_t debug_stream_type = 0;
 
 
@@ -160,6 +174,8 @@ int main(void) {
   i2c_init();
   Serial1.Init(USART1, 115200);
   Serial2.Init(USART2, 115200);
+
+
 
   Config cfg = Config_init_default;
   if (readSettingsFromFlash(&cfg)) {
@@ -213,12 +229,12 @@ int main(void) {
   GenericOut beeper(RCC_APB2Periph_GPIOA, GPIOA, GPIO_Pin_12, true);
   beeper.init(true);
 
-  initRx();
-
   waiter.waitForAccGyroCalibration();
 
   GenericOut green_led(RCC_APB2Periph_GPIOB, GPIOB, GPIO_Pin_3, true);
   green_led.init();
+
+  initEncoders();
 
   //	GenericOut debug_out(RCC_APB2Periph_GPIOA, GPIOA, GPIO_Pin_11, false);
   //	debug_out.init();
@@ -238,6 +254,8 @@ int main(void) {
   read_pos = 0;
   while (1) {  // background work
     IWDG_ReloadCounter();
+
+    // green_led.setState(GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_1));
 
     if ((uint16_t)(millis() - last_check_time) > 100u) {
       last_check_time = millis();
@@ -298,7 +316,6 @@ int main(void) {
       }
 
       case RequestId_WRITE_CONFIG: {
-        Config_Callibration c = cfg.callibration;
         bool good =
             readSettingsFromBuffer(&cfg, comms.data(), comms.data_len());
         if (good) {
@@ -316,10 +333,10 @@ int main(void) {
         Stats stats = Stats_init_default;
         stats.drive_angle = imu.angles[ANGLE_DRIVE];
         stats.stear_angle = imu.angles[ANGLE_STEER];
-        stats.pad_pressure1 = main_ctrl.right;
-        stats.pad_pressure1 = main_ctrl.fwd;
-        stats.batt_current = main_ctrl.fwdTargetAngle_;
-        stats.batt_voltage = main_ctrl.rightTargetAngle_;
+        stats.pad_pressure1 = main_ctrl.decoders_[0].position();
+        stats.pad_pressure2 = main_ctrl.decoders_[1].position();
+        stats.batt_current = main_ctrl.decoders_[0].errors() + main_ctrl.decoders_[1].errors() + main_ctrl.decoders_[2].errors();
+        stats.batt_voltage = main_ctrl.decoders_[2].position();
 
         int16_t data_len =
             saveProtoToBuffer(scratch, sizeof(scratch), Stats_fields, &stats);

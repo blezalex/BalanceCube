@@ -26,6 +26,10 @@ void BoardController::processUpdate(const MpuUpdate& update) {
   imu_.compute(update);
   State current_state = state_.update();
 
+  for (int i = 0; i < 3; ++i) {
+    decoders_[i].Update();
+  }
+
   switch (current_state) {
     case State::Stopped:
       Reset();

@@ -1,5 +1,6 @@
-
 include ../nanopb/extra/nanopb.mk
+
+# must install grpcio-tools
 
 BUILD_DIR := build
 
@@ -23,12 +24,12 @@ OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 
 # Build step for C source
 ${BUILD_DIR}/%.c.o : %.c ${HDRS}
-	mkdir -p $(dir $@)
+#	mkdir -p $(dir $@)
 	${CC} $(CFLAGS) ${INC_PARAMS} -c $< -o $@
 
 # Build step for C++ source
 $(BUILD_DIR)/%.cpp.o: %.cpp ${HDRS}
-	mkdir -p $(dir $@)
+#	mkdir -p $(dir $@)
 	$(CXX) $(CPPFLAGS) $(INC_PARAMS) -c $< -o $@
 
 ${BUILD_DIR}/descriptor.pb.bin: drv/comms/config.proto

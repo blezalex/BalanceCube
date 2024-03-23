@@ -10,6 +10,7 @@
 #include "lpf.hpp"
 #include "pid.hpp"
 #include "stateTracker.hpp"
+#include "io/quad_decoder.h"
 
 #include "cmsis_boot/stm32f10x.h"
 #include "io/rx.h"
@@ -66,7 +67,8 @@ class BoardController : public UpdateListener {
 				motor3_(pwm3, dir3, &(settings_->misc.motor_pwm_rc), &(settings_->misc.motor_pwm_current)),
         motor1_out_lpf_(&(settings_->balance_settings.output_lpf_rc)),
         motor2_out_lpf_(&(settings_->balance_settings.output_lpf_rc)),
-				motor3_out_lpf_(&(settings_->balance_settings.output_lpf_rc)) {}
+				motor3_out_lpf_(&(settings_->balance_settings.output_lpf_rc)),
+        decoders_{ {GPIOA, GPIO_Pin_2, GPIO_Pin_3}, {GPIOA, GPIO_Pin_6, GPIO_Pin_7}, {GPIOB, GPIO_Pin_0, GPIO_Pin_1} } {}
 
 
   // Main control loop. Runs at 1000hz Must finish in less than 1ms otherwise
@@ -107,4 +109,6 @@ class BoardController : public UpdateListener {
 
   float fwdTargetAngle_;
   float rightTargetAngle_;
+
+  QuadDecoder decoders_[3];
 };

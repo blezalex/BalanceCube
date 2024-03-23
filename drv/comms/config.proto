@@ -24,11 +24,6 @@ message Config {
   required PidConfig yaw_pid = 8;
 
   message BalancingConfig {
-    // min value is 1 = linear
-    required float balance_expo = 1 [ default = 0.15 ];
-    // 0 - exponential, 1 natural, 2 - poly
-    optional int32 expo_type = 12 [ default = 0 ];
-
     optional int32 max_start_angle = 3 [ default = 4 ];
 
     required int32 shutoff_angle = 5 [ default = 15 ];

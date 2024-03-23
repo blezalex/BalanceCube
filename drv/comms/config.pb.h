@@ -26,8 +26,6 @@ typedef struct _Config_PidConfig {
 } Config_PidConfig;
 
 typedef struct _Config_BalancingConfig {
-    /* min value is 1 = linear */
-    float balance_expo;
     bool has_max_start_angle;
     int32_t max_start_angle;
     int32_t shutoff_angle;
@@ -47,9 +45,6 @@ typedef struct _Config_BalancingConfig {
     uint32_t global_gyro_lpf;
     bool has_imu_beta;
     float imu_beta;
-    /* 0 - exponential, 1 natural, 2 - poly */
-    bool has_expo_type;
-    int32_t expo_type;
 } Config_BalancingConfig;
 
 typedef struct _Config_Misc {
@@ -82,12 +77,12 @@ extern "C" {
 #define Config_init_default                      {false, Config_Callibration_init_default, Config_PidConfig_init_default, Config_BalancingConfig_init_default, Config_Misc_init_default, Config_PidConfig_init_default, Config_PidConfig_init_default}
 #define Config_Callibration_init_default         {0.0f, 0.0f, 0.0f}
 #define Config_PidConfig_init_default            {0.0f, 0.0f, 0.0f, 0.0f, false, 0.0f}
-#define Config_BalancingConfig_init_default      {0.15f, false, 4, 15, 1.0f, 300, 0.15f, 2u, false, 0.02f, false, 0}
+#define Config_BalancingConfig_init_default      {false, 4, 15, 1.0f, 300, 0.15f, 2u, false, 0.02f}
 #define Config_Misc_init_default                 {false, 0.0f, 0.001f, 0.0f, false, 1700.0f, false, 0.001f}
 #define Config_init_zero                         {false, Config_Callibration_init_zero, Config_PidConfig_init_zero, Config_BalancingConfig_init_zero, Config_Misc_init_zero, Config_PidConfig_init_zero, Config_PidConfig_init_zero}
 #define Config_Callibration_init_zero            {0, 0, 0}
 #define Config_PidConfig_init_zero               {0, 0, 0, 0, false, 0}
-#define Config_BalancingConfig_init_zero         {0, false, 0, 0, 0, 0, 0, 0, false, 0, false, 0}
+#define Config_BalancingConfig_init_zero         {false, 0, 0, 0, 0, 0, 0, false, 0}
 #define Config_Misc_init_zero                    {false, 0, 0, 0, false, 0, false, 0}
 
 /* Field tags (for use in manual encoding/decoding) */
@@ -99,7 +94,6 @@ extern "C" {
 #define Config_PidConfig_i_tag                   3
 #define Config_PidConfig_max_i_tag               4
 #define Config_PidConfig_i_expo_tag              13
-#define Config_BalancingConfig_balance_expo_tag  1
 #define Config_BalancingConfig_max_start_angle_tag 3
 #define Config_BalancingConfig_shutoff_angle_tag 5
 #define Config_BalancingConfig_output_lpf_rc_tag 7
@@ -107,7 +101,6 @@ extern "C" {
 #define Config_BalancingConfig_balance_d_param_lpf_rc_tag 9
 #define Config_BalancingConfig_global_gyro_lpf_tag 10
 #define Config_BalancingConfig_imu_beta_tag      11
-#define Config_BalancingConfig_expo_type_tag     12
 #define Config_Misc_yaw_target_tag               4
 #define Config_Misc_motor_speed_filter_tag       6
 #define Config_Misc_stop_wheel_signal_p_tag      7
@@ -154,17 +147,15 @@ X(a, STATIC,   OPTIONAL, FLOAT,    i_expo,           13)
 #define Config_PidConfig_DEFAULT (const pb_byte_t*)"\x0d\x00\x00\x00\x00\x15\x00\x00\x00\x00\x1d\x00\x00\x00\x00\x25\x00\x00\x00\x00\x6d\x00\x00\x00\x00\x00"
 
 #define Config_BalancingConfig_FIELDLIST(X, a) \
-X(a, STATIC,   REQUIRED, FLOAT,    balance_expo,      1) \
 X(a, STATIC,   OPTIONAL, INT32,    max_start_angle,   3) \
 X(a, STATIC,   REQUIRED, INT32,    shutoff_angle,     5) \
 X(a, STATIC,   REQUIRED, FLOAT,    output_lpf_rc,     7) \
 X(a, STATIC,   REQUIRED, INT32,    balance_d_param_limiter,   8) \
 X(a, STATIC,   REQUIRED, FLOAT,    balance_d_param_lpf_rc,   9) \
 X(a, STATIC,   REQUIRED, UINT32,   global_gyro_lpf,  10) \
-X(a, STATIC,   OPTIONAL, FLOAT,    imu_beta,         11) \
-X(a, STATIC,   OPTIONAL, INT32,    expo_type,        12)
+X(a, STATIC,   OPTIONAL, FLOAT,    imu_beta,         11)
 #define Config_BalancingConfig_CALLBACK NULL
-#define Config_BalancingConfig_DEFAULT (const pb_byte_t*)"\x0d\x9a\x99\x19\x3e\x18\x04\x28\x0f\x3d\x00\x00\x80\x3f\x40\xac\x02\x4d\x9a\x99\x19\x3e\x50\x02\x5d\x0a\xd7\xa3\x3c\x60\x00\x00"
+#define Config_BalancingConfig_DEFAULT (const pb_byte_t*)"\x18\x04\x28\x0f\x3d\x00\x00\x80\x3f\x40\xac\x02\x4d\x9a\x99\x19\x3e\x50\x02\x5d\x0a\xd7\xa3\x3c\x00"
 
 #define Config_Misc_FIELDLIST(X, a) \
 X(a, STATIC,   OPTIONAL, FLOAT,    yaw_target,        4) \
@@ -189,11 +180,11 @@ extern const pb_msgdesc_t Config_Misc_msg;
 #define Config_Misc_fields &Config_Misc_msg
 
 /* Maximum encoded size of messages (where known) */
-#define Config_BalancingConfig_size              70
+#define Config_BalancingConfig_size              54
 #define Config_Callibration_size                 15
 #define Config_Misc_size                         25
 #define Config_PidConfig_size                    25
-#define Config_size                              197
+#define Config_size                              181
 #define DRV_COMMS_CONFIG_PB_H_MAX_SIZE           Config_size
 
 #ifdef __cplusplus

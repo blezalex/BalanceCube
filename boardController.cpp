@@ -51,15 +51,6 @@ void BoardController::processUpdate(const MpuUpdate& update) {
       // intentional fall through
     case State::Starting:
     case State::Running:
-
-      // float fwdTargetAngle = mapRcInput(rxVals[1]) * 5;
-      // float rightTargetAngle = mapRcInput(rxVals[0]) * 5;
-
-      // float fwdTargetAngle =
-      //     fwd_lpf_.getVal() * settings_->misc.stop_wheel_signal_p * settings_->misc.motor1_dir;
-      // float rightTargetAngle =
-      //     right_lpf_.getVal() * settings_->misc.stop_wheel_signal_p * settings_->misc.motor1_dir;
-
       float fwdTargetAngle = 0;
       fwdTargetAngle += (1.0 / - sin(deg_to_rad(120))) * m1_speed_lpf_.getVal();
       fwdTargetAngle += (1.0 /   sin(deg_to_rad(120))) * m2_speed_lpf_.getVal();

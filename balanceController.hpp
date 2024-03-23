@@ -6,16 +6,6 @@
 #include "lpf.hpp"
 
 
-//https://www.desmos.com/calculator/atzqop6rhr
-static float applyExpo(float value, int expo_type, float expo_value) {
-	switch (expo_type) {
-		case 0: return applyExpoReal(value, expo_value);
-		case 1: return applyExpoNatural(value, expo_value);
-		case 2: return applyExpoPoly(value, expo_value);
-		default: return value;
-	}
-}
-
 class BalanceController  {
 public:
 	BalanceController(const Config* settings, Config_PidConfig* pid_config) :
@@ -40,9 +30,7 @@ public:
 		d_term = d_lpf_.compute(d_term);
 		float result = rate_pid_.compute(error, d_term);
 
-		result = constrain(result, -1, 1);
-
-		return applyExpo(result, settings_->balance_settings.expo_type, settings_->balance_settings.balance_expo);
+		return constrain(result, -1, 1);
 	}
 
 	// Compute torque needed while board in normal mode.

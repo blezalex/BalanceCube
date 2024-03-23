@@ -14,6 +14,12 @@ class QuadDecoder {
     return position_;
   }
 
+  int64_t GetPositionAndReset() {
+    int64_t pos = position_;
+    position_ = 0;
+    return pos;
+  }
+
   uint64_t errors() const {
     return errors_;
   }
@@ -26,6 +32,6 @@ class QuadDecoder {
 
   uint8_t prev_;
 
-  int64_t position_;
+  volatile int64_t position_;
   uint64_t errors_;
 };

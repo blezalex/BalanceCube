@@ -53,22 +53,14 @@ typedef struct _Config_BalancingConfig {
 } Config_BalancingConfig;
 
 typedef struct _Config_Misc {
-    /* the values are 1 or -1 */
-    bool has_motor1_dir;
-    int32_t motor1_dir;
-    bool has_motor2_dir;
-    int32_t motor2_dir;
-    bool has_motor3_dir;
-    int32_t motor3_dir;
     bool has_yaw_target;
     float yaw_target;
-    float throttle_rc;
-    /* 0-1, 1 = 100% of output power = no warning at all */
+    float motor_speed_filter;
     float stop_wheel_signal_p;
-    bool has_motor_pwm_rc;
-    float motor_pwm_rc;
-    bool has_motor_pwm_current;
-    float motor_pwm_current;
+    bool has_motor_max_speed;
+    float motor_max_speed;
+    bool has_target_angle_filter;
+    float target_angle_filter;
 } Config_Misc;
 
 typedef struct _Config {
@@ -91,12 +83,12 @@ extern "C" {
 #define Config_Callibration_init_default         {0.0f, 0.0f, 0.0f}
 #define Config_PidConfig_init_default            {0.0f, 0.0f, 0.0f, 0.0f, false, 0.0f}
 #define Config_BalancingConfig_init_default      {0.15f, false, 4, 15, 1.0f, 300, 0.15f, 2u, false, 0.02f, false, 0}
-#define Config_Misc_init_default                 {false, 1, false, 1, false, 1, false, 0.0f, 0.0001f, 0.0f, false, 0.001f, false, 0.5f}
+#define Config_Misc_init_default                 {false, 0.0f, 0.001f, 0.0f, false, 1700.0f, false, 0.001f}
 #define Config_init_zero                         {false, Config_Callibration_init_zero, Config_PidConfig_init_zero, Config_BalancingConfig_init_zero, Config_Misc_init_zero, Config_PidConfig_init_zero, Config_PidConfig_init_zero}
 #define Config_Callibration_init_zero            {0, 0, 0}
 #define Config_PidConfig_init_zero               {0, 0, 0, 0, false, 0}
 #define Config_BalancingConfig_init_zero         {0, false, 0, 0, 0, 0, 0, 0, false, 0, false, 0}
-#define Config_Misc_init_zero                    {false, 0, false, 0, false, 0, false, 0, 0, 0, false, 0, false, 0}
+#define Config_Misc_init_zero                    {false, 0, 0, 0, false, 0, false, 0}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define Config_Callibration_x_offset_tag         4
@@ -116,14 +108,11 @@ extern "C" {
 #define Config_BalancingConfig_global_gyro_lpf_tag 10
 #define Config_BalancingConfig_imu_beta_tag      11
 #define Config_BalancingConfig_expo_type_tag     12
-#define Config_Misc_motor1_dir_tag               1
-#define Config_Misc_motor2_dir_tag               2
-#define Config_Misc_motor3_dir_tag               3
 #define Config_Misc_yaw_target_tag               4
-#define Config_Misc_throttle_rc_tag              6
+#define Config_Misc_motor_speed_filter_tag       6
 #define Config_Misc_stop_wheel_signal_p_tag      7
-#define Config_Misc_motor_pwm_rc_tag             8
-#define Config_Misc_motor_pwm_current_tag        9
+#define Config_Misc_motor_max_speed_tag          8
+#define Config_Misc_target_angle_filter_tag      10
 #define Config_callibration_tag                  1
 #define Config_angle_pid_tag                     2
 #define Config_balance_settings_tag              4
@@ -178,16 +167,13 @@ X(a, STATIC,   OPTIONAL, INT32,    expo_type,        12)
 #define Config_BalancingConfig_DEFAULT (const pb_byte_t*)"\x0d\x9a\x99\x19\x3e\x18\x04\x28\x0f\x3d\x00\x00\x80\x3f\x40\xac\x02\x4d\x9a\x99\x19\x3e\x50\x02\x5d\x0a\xd7\xa3\x3c\x60\x00\x00"
 
 #define Config_Misc_FIELDLIST(X, a) \
-X(a, STATIC,   OPTIONAL, INT32,    motor1_dir,        1) \
-X(a, STATIC,   OPTIONAL, INT32,    motor2_dir,        2) \
-X(a, STATIC,   OPTIONAL, INT32,    motor3_dir,        3) \
 X(a, STATIC,   OPTIONAL, FLOAT,    yaw_target,        4) \
-X(a, STATIC,   REQUIRED, FLOAT,    throttle_rc,       6) \
+X(a, STATIC,   REQUIRED, FLOAT,    motor_speed_filter,   6) \
 X(a, STATIC,   REQUIRED, FLOAT,    stop_wheel_signal_p,   7) \
-X(a, STATIC,   OPTIONAL, FLOAT,    motor_pwm_rc,      8) \
-X(a, STATIC,   OPTIONAL, FLOAT,    motor_pwm_current,   9)
+X(a, STATIC,   OPTIONAL, FLOAT,    motor_max_speed,   8) \
+X(a, STATIC,   OPTIONAL, FLOAT,    target_angle_filter,  10)
 #define Config_Misc_CALLBACK NULL
-#define Config_Misc_DEFAULT (const pb_byte_t*)"\x08\x01\x10\x01\x18\x01\x25\x00\x00\x00\x00\x35\x17\xb7\xd1\x38\x3d\x00\x00\x00\x00\x45\x6f\x12\x83\x3a\x4d\x00\x00\x00\x3f\x00"
+#define Config_Misc_DEFAULT (const pb_byte_t*)"\x25\x00\x00\x00\x00\x35\x6f\x12\x83\x3a\x3d\x00\x00\x00\x00\x45\x00\x80\xd4\x44\x55\x6f\x12\x83\x3a\x00"
 
 extern const pb_msgdesc_t Config_msg;
 extern const pb_msgdesc_t Config_Callibration_msg;
@@ -205,9 +191,9 @@ extern const pb_msgdesc_t Config_Misc_msg;
 /* Maximum encoded size of messages (where known) */
 #define Config_BalancingConfig_size              70
 #define Config_Callibration_size                 15
-#define Config_Misc_size                         58
+#define Config_Misc_size                         25
 #define Config_PidConfig_size                    25
-#define Config_size                              230
+#define Config_size                              197
 #define DRV_COMMS_CONFIG_PB_H_MAX_SIZE           Config_size
 
 #ifdef __cplusplus

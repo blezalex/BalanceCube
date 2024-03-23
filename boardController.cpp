@@ -9,26 +9,29 @@ float mapRcInput(uint16_t input) {
 }
 
 void BoardController::Reset() {
-    motor1_.Set(0);
-    motor2_.Set(0);
-    motor3_.Set(0);
-    
-    motor1_out_lpf_.reset();
-    motor2_out_lpf_.reset();
-    motor3_out_lpf_.reset();
+  fwd_filter_.reset();
+  right_filter_.reset();
+  motor1_.Reset();
+  motor2_.Reset();
+  motor3_.Reset();
+}
 
-    m1_speed_lpf_.reset();
-    m2_speed_lpf_.reset();
-    m3_speed_lpf_.reset();
+void BoardController::updateDecoders() {
+  for (int i = 0; i < 3; ++i) {
+    decoders_[i].Update();
+  }
 }
 
 void BoardController::processUpdate(const MpuUpdate& update) {
   imu_.compute(update);
   State current_state = state_.update();
 
-  for (int i = 0; i < 3; ++i) {
-    decoders_[i].Update();
-  }
+  // max speed observd 1683
+  m1_speed_lpf_.compute(decoders_[0].GetPositionAndReset());
+  m2_speed_lpf_.compute(decoders_[1].GetPositionAndReset());
+  m3_speed_lpf_.compute(decoders_[2].GetPositionAndReset());
+
+  // motor3_.Set(-100);
 
   switch (current_state) {
     case State::Stopped:
@@ -73,6 +76,9 @@ void BoardController::processUpdate(const MpuUpdate& update) {
       fwdTargetAngle = constrain(fwdTargetAngle, -5, 5);
       rightTargetAngle = constrain(rightTargetAngle, -5, 5);
 
+      fwdTargetAngle = fwd_filter_.compute(fwdTargetAngle);
+      rightTargetAngle = right_filter_.compute(rightTargetAngle);
+
       if (current_state == State::Starting) {
         fwd = pitch_balancer_.computeStarting(imu_.angles[1] - fwdTargetAngle,
                                               update.gyro[1],
@@ -95,13 +101,9 @@ void BoardController::processUpdate(const MpuUpdate& update) {
 		  const float pwm2 = yaw + cos(deg_to_rad(120)) * right + sin(deg_to_rad(120)) * fwd;
       const float pwm3 = yaw + right;
 
-      m1_speed_lpf_.compute(pwm1);
-      m2_speed_lpf_.compute(pwm2);
-      m3_speed_lpf_.compute(pwm3);
-
-      motor1_.Set(motor1_out_lpf_.compute(pwm1) * settings_->misc.motor1_dir);
-      motor2_.Set(motor2_out_lpf_.compute(pwm2) * settings_->misc.motor2_dir);
-      motor3_.Set(motor3_out_lpf_.compute(pwm3) * settings_->misc.motor3_dir);
+      motor1_.Set(pwm1, m1_speed_lpf_.getVal());
+      motor2_.Set(pwm2, m2_speed_lpf_.getVal());
+      motor3_.Set(pwm3, m3_speed_lpf_.getVal());
       break;
   }
 }

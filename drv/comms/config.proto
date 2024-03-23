@@ -57,19 +57,13 @@ message Config {
   required BalancingConfig balance_settings = 4;
   
   message Misc {
-    // the values are 1 or -1
-    optional int32 motor1_dir = 1 [ default = 1 ];
-    optional int32 motor2_dir = 2 [ default = 1 ];
-    optional int32 motor3_dir = 3 [ default = 1 ];
+    required float motor_speed_filter = 6 [ default = 0.001 ];
+    optional float motor_max_speed = 8 [ default = 1700 ];
 
-    // 0-1, 1 = 100% of output power = no warning at all
     required float stop_wheel_signal_p = 7 [ default = 0 ];
-    required float throttle_rc = 6 [ default = 0.0001 ];
+    optional float target_angle_filter = 10 [ default = 0.001 ];
 
     optional float yaw_target = 4 [ default = 0 ];
-
-    optional float motor_pwm_rc = 8 [ default = 0.001 ];
-    optional float motor_pwm_current = 9 [ default = 0.5];  
   }
   
   required Misc misc = 5;

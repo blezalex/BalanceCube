@@ -146,6 +146,39 @@ GenericOut* status_led_ext;
 extern uint8_t cf_data[] asm("_binary_build_descriptor_pb_bin_deflate_start");
 extern uint8_t cf_data_e[] asm("_binary_build_descriptor_pb_bin_deflate_end");
 
+static BoardController* global_main_ctrl;
+
+void InitDecoderTimer() {
+  // TIMER
+  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
+
+  TIM_TimeBaseInitTypeDef TimerBaseInit;
+  TIM_TimeBaseStructInit(&TimerBaseInit);
+  TIM_TimeBaseStructInit(&TimerBaseInit);
+  TimerBaseInit.TIM_Prescaler = SystemCoreClock / 1000000 - 1;  // 1us tick ;
+  TimerBaseInit.TIM_Period = 10;                                // 100kHz
+  TimerBaseInit.TIM_CounterMode = TIM_CounterMode_Up;
+  TIM_TimeBaseInit(TIM2, &TimerBaseInit);
+  TIM_Cmd(TIM2, ENABLE);
+
+  NVIC_InitTypeDef nvicStructure;
+  nvicStructure.NVIC_IRQChannel = TIM2_IRQn;
+  nvicStructure.NVIC_IRQChannelPreemptionPriority = 0;
+  nvicStructure.NVIC_IRQChannelSubPriority = 0;
+  nvicStructure.NVIC_IRQChannelCmd = ENABLE;
+  NVIC_Init(&nvicStructure);
+
+  TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE);
+}
+
+extern "C" void TIM2_IRQHandler() {
+  if (TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET) {
+    TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+    global_main_ctrl->updateDecoders();
+  }
+}
+
+
 int main(void) {
   SystemInit();
 
@@ -245,7 +278,11 @@ int main(void) {
   static BoardController main_ctrl(&cfg, imu, status_led, beeper, guards,
                             guards_count, green_led, &pmw1, &dir1, &pwm2, &dir2, &pwm3, &dir3);
 
+  global_main_ctrl = &main_ctrl;
+
   accGyro.setListener(&main_ctrl);
+
+  InitDecoderTimer();
 
   comms.Init(&Serial1);
   uint16_t last_check_time = 0;
@@ -333,10 +370,10 @@ int main(void) {
         Stats stats = Stats_init_default;
         stats.drive_angle = imu.angles[ANGLE_DRIVE];
         stats.stear_angle = imu.angles[ANGLE_STEER];
-        stats.pad_pressure1 = main_ctrl.decoders_[0].position();
-        stats.pad_pressure2 = main_ctrl.decoders_[1].position();
+        stats.pad_pressure1 = main_ctrl.m1_speed_lpf_.getVal() * 100;
+        stats.pad_pressure2 = main_ctrl.m2_speed_lpf_.getVal() * 100;
         stats.batt_current = main_ctrl.decoders_[0].errors() + main_ctrl.decoders_[1].errors() + main_ctrl.decoders_[2].errors();
-        stats.batt_voltage = main_ctrl.decoders_[2].position();
+        stats.batt_voltage = main_ctrl.m3_speed_lpf_.getVal() * 100;
 
         int16_t data_len =
             saveProtoToBuffer(scratch, sizeof(scratch), Stats_fields, &stats);

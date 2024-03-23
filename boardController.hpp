@@ -22,26 +22,39 @@
 
 class MotorController {
  public:
-  MotorController(PwmOut* pwm, GenericOut* dir, float* pwm_rc, float* pmw_cur) : pwm_(pwm), dir_(dir), speed_cur_lpf_(pwm_rc), pmw_cur_(pmw_cur) {}
+  MotorController(PwmOut* pwm, GenericOut* dir, float* speed_at_100,
+                  float* out_lpf)
+      : pwm_(pwm),
+        dir_(dir),
+        speed_at_100_(speed_at_100),
+        out_filter_(out_lpf) {}
 
-  void Set(float cmd) {
-    cmd += speed_cur_lpf_.compute(cmd) * *pmw_cur_; 
+  // range -1:1
+  void Set(float cmd, float current_speed) {
+    cmd += current_speed / *speed_at_100_;
+
+    cmd = out_filter_.compute(cmd);
 
     dir_->setState(cmd > 0);
 
-    int16_t duty = fabsf(cmd) * 500;
-    if (duty > 500) {
-      duty = 500;
+    int16_t duty = fabsf(cmd) * MAX_DUTY;
+    if (duty > MAX_DUTY) {
+      duty = MAX_DUTY;
     }
 
-    pwm_->set(500 - duty);
+    pwm_->set(MAX_DUTY - duty);
+  }
+
+  void Reset() {
+    out_filter_.reset();
+    pwm_->set(MAX_DUTY);
   }
 
  private:
   PwmOut* pwm_;
   GenericOut* dir_;
-  LPF speed_cur_lpf_;
-  float* pmw_cur_;
+  BiQuadLpf out_filter_;
+  float* speed_at_100_;
 };
 
 class BoardController : public UpdateListener {
@@ -49,7 +62,8 @@ class BoardController : public UpdateListener {
   BoardController(Config* settings, IMU& imu, GenericOut& status_led,
                   GenericOut& beeper, Guard** guards, int guards_count,
                   GenericOut& green_led, PwmOut* pwm1, GenericOut* dir1,
-                  PwmOut* pwm2, GenericOut* dir2, PwmOut* pwm3, GenericOut* dir3)
+                  PwmOut* pwm2, GenericOut* dir2, PwmOut* pwm3,
+                  GenericOut* dir3)
       : settings_(settings),
         imu_(imu),
         state_(guards, guards_count),
@@ -59,21 +73,30 @@ class BoardController : public UpdateListener {
         status_led_(status_led),
         beeper_(beeper),
         green_led_(green_led),
-        m1_speed_lpf_(&settings->misc.throttle_rc),
-        m2_speed_lpf_(&settings->misc.throttle_rc),
-        m3_speed_lpf_(&settings->misc.throttle_rc),
-        motor1_(pwm1, dir1, &(settings_->misc.motor_pwm_rc), &(settings_->misc.motor_pwm_current)),
-        motor2_(pwm2, dir2, &(settings_->misc.motor_pwm_rc), &(settings_->misc.motor_pwm_current)),
-				motor3_(pwm3, dir3, &(settings_->misc.motor_pwm_rc), &(settings_->misc.motor_pwm_current)),
-        motor1_out_lpf_(&(settings_->balance_settings.output_lpf_rc)),
-        motor2_out_lpf_(&(settings_->balance_settings.output_lpf_rc)),
-				motor3_out_lpf_(&(settings_->balance_settings.output_lpf_rc)),
-        decoders_{ {GPIOA, GPIO_Pin_2, GPIO_Pin_3}, {GPIOA, GPIO_Pin_6, GPIO_Pin_7}, {GPIOB, GPIO_Pin_0, GPIO_Pin_1} } {}
-
+        m1_speed_lpf_(&settings->misc.motor_speed_filter),
+        m2_speed_lpf_(&settings->misc.motor_speed_filter),
+        m3_speed_lpf_(&settings->misc.motor_speed_filter),
+        motor1_(pwm1, dir1, &(settings_->misc.motor_max_speed),
+                &(settings_->balance_settings.output_lpf_rc)),
+        motor2_(pwm2, dir2, &(settings_->misc.motor_max_speed),
+                &(settings_->balance_settings.output_lpf_rc)),
+        motor3_(pwm3, dir3, &(settings_->misc.motor_max_speed),
+                &(settings_->balance_settings.output_lpf_rc)),
+        decoders_{{GPIOB, GPIO_Pin_0, GPIO_Pin_1},
+                  {GPIOA, GPIO_Pin_6, GPIO_Pin_7},
+                  {GPIOA, GPIO_Pin_2, GPIO_Pin_3}},
+                  fwd_filter_(&(settings_->misc.target_angle_filter)),
+                  right_filter_(&(settings_->misc.target_angle_filter)) {
+    m1_speed_lpf_.reset();
+    m2_speed_lpf_.reset();
+    m3_speed_lpf_.reset();
+  }
 
   // Main control loop. Runs at 1000hz Must finish in less than 1ms otherwise
   // controller will freeze.
   void processUpdate(const MpuUpdate& update);
+
+  void updateDecoders();
 
   void Reset();
 
@@ -99,16 +122,14 @@ class BoardController : public UpdateListener {
   BiQuadLpf m3_speed_lpf_;
 
   MotorController motor1_;
-  BiQuadLpf motor1_out_lpf_;
-
   MotorController motor2_;
-  BiQuadLpf motor2_out_lpf_;
-
-	MotorController motor3_;
-  BiQuadLpf motor3_out_lpf_;
+  MotorController motor3_;
 
   float fwdTargetAngle_;
   float rightTargetAngle_;
+
+  BiQuadLpf fwd_filter_;
+  BiQuadLpf right_filter_;
 
   QuadDecoder decoders_[3];
 };

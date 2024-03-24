@@ -152,13 +152,12 @@ void InitDecoderTimer() {
   // TIMER
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
 
-  TIM_TimeBaseInitTypeDef TimerBaseInit;
-  TIM_TimeBaseStructInit(&TimerBaseInit);
-  TIM_TimeBaseStructInit(&TimerBaseInit);
-  TimerBaseInit.TIM_Prescaler = SystemCoreClock / 1000000 - 1;  // 1us tick ;
-  TimerBaseInit.TIM_Period = 10;                                // 100kHz
-  TimerBaseInit.TIM_CounterMode = TIM_CounterMode_Up;
-  TIM_TimeBaseInit(TIM2, &TimerBaseInit);
+  TIM_TimeBaseInitTypeDef timer_settings;
+  TIM_TimeBaseStructInit(&timer_settings);
+  timer_settings.TIM_Prescaler = SystemCoreClock / 1000000 - 1;  // 1us tick ;
+  timer_settings.TIM_Period = 10;                                // 100kHz
+  timer_settings.TIM_CounterMode = TIM_CounterMode_Up;
+  TIM_TimeBaseInit(TIM2, &timer_settings);
   TIM_Cmd(TIM2, ENABLE);
 
   NVIC_InitTypeDef nvicStructure;

@@ -14,7 +14,6 @@ message Config {
     required float d = 2 [ default = 0 ];
     required float i = 3 [ default = 0 ];
     required float max_i = 4 [ default = 0 ];
-    optional float i_expo = 13 [ default = 0 ];
   }
 
   required PidConfig angle_pid = 2;
@@ -55,11 +54,12 @@ message Config {
     required float motor_speed_filter = 6 [ default = 0.001 ];
     optional float motor_max_speed = 8 [ default = 1700 ];
 
-    required float stop_wheel_signal_p = 7 [ default = 0 ];
     optional float target_angle_filter = 10 [ default = 0.001 ];
 
     optional float yaw_target = 4 [ default = 0 ];
   }
   
   required Misc misc = 5;
+
+  optional PidConfig target_angle = 6;
 }

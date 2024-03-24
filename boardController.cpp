@@ -11,6 +11,9 @@ float mapRcInput(uint16_t input) {
 void BoardController::Reset() {
   fwd_filter_.reset();
   right_filter_.reset();
+  fwd_target_pid_.reset();
+  right_target_pid_.reset();
+
   motor1_.Reset();
   motor2_.Reset();
   motor3_.Reset();
@@ -58,17 +61,14 @@ void BoardController::processUpdate(const MpuUpdate& update) {
       float rightTargetAngle = m3_speed_lpf_.getVal();
       rightTargetAngle += (1.0 / cos(deg_to_rad(120))) * (m1_speed_lpf_.getVal() + m2_speed_lpf_.getVal());
 
-      fwdTargetAngle *= settings_->misc.stop_wheel_signal_p;
-      rightTargetAngle *= settings_->misc.stop_wheel_signal_p;
+      fwdTargetAngle = fwd_filter_.compute(fwdTargetAngle);
+      rightTargetAngle = right_filter_.compute(rightTargetAngle);
 
-      fwdTargetAngle_ = fwdTargetAngle;
-      rightTargetAngle_ = rightTargetAngle;
+      fwdTargetAngle = -fwd_target_pid_.compute(fwdTargetAngle);
+      rightTargetAngle = -right_target_pid_.compute(rightTargetAngle);
 
       fwdTargetAngle = constrain(fwdTargetAngle, -5, 5);
       rightTargetAngle = constrain(rightTargetAngle, -5, 5);
-
-      fwdTargetAngle = fwd_filter_.compute(fwdTargetAngle);
-      rightTargetAngle = right_filter_.compute(rightTargetAngle);
 
       if (current_state == State::Starting) {
         fwd = pitch_balancer_.computeStarting(imu_.angles[1] - fwdTargetAngle,

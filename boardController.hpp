@@ -86,7 +86,9 @@ class BoardController : public UpdateListener {
                   {GPIOA, GPIO_Pin_6, GPIO_Pin_7},
                   {GPIOA, GPIO_Pin_2, GPIO_Pin_3}},
                   fwd_filter_(&(settings_->misc.target_angle_filter)),
-                  right_filter_(&(settings_->misc.target_angle_filter)) {
+                  right_filter_(&(settings_->misc.target_angle_filter)),
+        fwd_target_pid_(&(settings->target_angle)),
+        right_target_pid_(&(settings->target_angle)) {
     m1_speed_lpf_.reset();
     m2_speed_lpf_.reset();
     m3_speed_lpf_.reset();
@@ -125,11 +127,11 @@ class BoardController : public UpdateListener {
   MotorController motor2_;
   MotorController motor3_;
 
-  float fwdTargetAngle_;
-  float rightTargetAngle_;
-
   BiQuadLpf fwd_filter_;
   BiQuadLpf right_filter_;
 
   QuadDecoder decoders_[3];
+
+  PidController fwd_target_pid_;
+	PidController right_target_pid_;
 };

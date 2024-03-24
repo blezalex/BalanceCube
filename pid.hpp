@@ -19,16 +19,15 @@ public:
 
 	float compute(float error, float de) {
 		// Cumulative sumI changes slowly, it is OK to use I value from previous iteration here.
-		float output =  error * _params->p + de * _params->d + applyExpoPoly(_sumI,_params->i_expo);
+		float output =  error * _params->p + de * _params->d + _sumI;
 
-		float ierror = constrain(error, -_params->max_i, _params->max_i);
-		ierror = error * _params->i;
+		float ierror = error * _params->i;
 		// Accumulate I unless windup is detected.
-		if ((output < 1 && output > -1) ||
-				(output > 1 && ierror < 0) ||
-				(output < -1 && ierror > 0)) {
+		if ((output < _params->max_i && output > -_params->max_i) ||
+				(output > _params->max_i && ierror < 0) ||
+				(output < -_params->max_i && ierror > 0)) {
 			_sumI += ierror;
-			_sumI = constrain(_sumI, -1, 1); // limit to range
+			_sumI = constrain(_sumI, -_params->max_i, _params->max_i); // limit to range
 		}
 
 		return output;

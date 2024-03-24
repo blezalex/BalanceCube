@@ -21,8 +21,6 @@ typedef struct _Config_PidConfig {
     float d;
     float i;
     float max_i;
-    bool has_i_expo;
-    float i_expo;
 } Config_PidConfig;
 
 typedef struct _Config_BalancingConfig {
@@ -51,7 +49,6 @@ typedef struct _Config_Misc {
     bool has_yaw_target;
     float yaw_target;
     float motor_speed_filter;
-    float stop_wheel_signal_p;
     bool has_motor_max_speed;
     float motor_max_speed;
     bool has_target_angle_filter;
@@ -64,6 +61,8 @@ typedef struct _Config {
     Config_PidConfig angle_pid;
     Config_BalancingConfig balance_settings;
     Config_Misc misc;
+    bool has_target_angle;
+    Config_PidConfig target_angle;
     Config_PidConfig yaw_pid;
     Config_PidConfig rate_pid;
 } Config;
@@ -74,16 +73,16 @@ extern "C" {
 #endif
 
 /* Initializer values for message structs */
-#define Config_init_default                      {false, Config_Callibration_init_default, Config_PidConfig_init_default, Config_BalancingConfig_init_default, Config_Misc_init_default, Config_PidConfig_init_default, Config_PidConfig_init_default}
+#define Config_init_default                      {false, Config_Callibration_init_default, Config_PidConfig_init_default, Config_BalancingConfig_init_default, Config_Misc_init_default, false, Config_PidConfig_init_default, Config_PidConfig_init_default, Config_PidConfig_init_default}
 #define Config_Callibration_init_default         {0.0f, 0.0f, 0.0f}
-#define Config_PidConfig_init_default            {0.0f, 0.0f, 0.0f, 0.0f, false, 0.0f}
+#define Config_PidConfig_init_default            {0.0f, 0.0f, 0.0f, 0.0f}
 #define Config_BalancingConfig_init_default      {false, 4, 15, 1.0f, 300, 0.15f, 2u, false, 0.02f}
-#define Config_Misc_init_default                 {false, 0.0f, 0.001f, 0.0f, false, 1700.0f, false, 0.001f}
-#define Config_init_zero                         {false, Config_Callibration_init_zero, Config_PidConfig_init_zero, Config_BalancingConfig_init_zero, Config_Misc_init_zero, Config_PidConfig_init_zero, Config_PidConfig_init_zero}
+#define Config_Misc_init_default                 {false, 0.0f, 0.001f, false, 1700.0f, false, 0.001f}
+#define Config_init_zero                         {false, Config_Callibration_init_zero, Config_PidConfig_init_zero, Config_BalancingConfig_init_zero, Config_Misc_init_zero, false, Config_PidConfig_init_zero, Config_PidConfig_init_zero, Config_PidConfig_init_zero}
 #define Config_Callibration_init_zero            {0, 0, 0}
-#define Config_PidConfig_init_zero               {0, 0, 0, 0, false, 0}
+#define Config_PidConfig_init_zero               {0, 0, 0, 0}
 #define Config_BalancingConfig_init_zero         {false, 0, 0, 0, 0, 0, 0, false, 0}
-#define Config_Misc_init_zero                    {false, 0, 0, 0, false, 0, false, 0}
+#define Config_Misc_init_zero                    {false, 0, 0, false, 0, false, 0}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define Config_Callibration_x_offset_tag         4
@@ -93,7 +92,6 @@ extern "C" {
 #define Config_PidConfig_d_tag                   2
 #define Config_PidConfig_i_tag                   3
 #define Config_PidConfig_max_i_tag               4
-#define Config_PidConfig_i_expo_tag              13
 #define Config_BalancingConfig_max_start_angle_tag 3
 #define Config_BalancingConfig_shutoff_angle_tag 5
 #define Config_BalancingConfig_output_lpf_rc_tag 7
@@ -103,13 +101,13 @@ extern "C" {
 #define Config_BalancingConfig_imu_beta_tag      11
 #define Config_Misc_yaw_target_tag               4
 #define Config_Misc_motor_speed_filter_tag       6
-#define Config_Misc_stop_wheel_signal_p_tag      7
 #define Config_Misc_motor_max_speed_tag          8
 #define Config_Misc_target_angle_filter_tag      10
 #define Config_callibration_tag                  1
 #define Config_angle_pid_tag                     2
 #define Config_balance_settings_tag              4
 #define Config_misc_tag                          5
+#define Config_target_angle_tag                  6
 #define Config_yaw_pid_tag                       8
 #define Config_rate_pid_tag                      9
 
@@ -119,6 +117,7 @@ X(a, STATIC,   OPTIONAL, MESSAGE,  callibration,      1) \
 X(a, STATIC,   REQUIRED, MESSAGE,  angle_pid,         2) \
 X(a, STATIC,   REQUIRED, MESSAGE,  balance_settings,   4) \
 X(a, STATIC,   REQUIRED, MESSAGE,  misc,              5) \
+X(a, STATIC,   OPTIONAL, MESSAGE,  target_angle,      6) \
 X(a, STATIC,   REQUIRED, MESSAGE,  yaw_pid,           8) \
 X(a, STATIC,   REQUIRED, MESSAGE,  rate_pid,          9)
 #define Config_CALLBACK NULL
@@ -127,6 +126,7 @@ X(a, STATIC,   REQUIRED, MESSAGE,  rate_pid,          9)
 #define Config_angle_pid_MSGTYPE Config_PidConfig
 #define Config_balance_settings_MSGTYPE Config_BalancingConfig
 #define Config_misc_MSGTYPE Config_Misc
+#define Config_target_angle_MSGTYPE Config_PidConfig
 #define Config_yaw_pid_MSGTYPE Config_PidConfig
 #define Config_rate_pid_MSGTYPE Config_PidConfig
 
@@ -141,10 +141,9 @@ X(a, STATIC,   REQUIRED, FLOAT,    z_offset,          6)
 X(a, STATIC,   REQUIRED, FLOAT,    p,                 1) \
 X(a, STATIC,   REQUIRED, FLOAT,    d,                 2) \
 X(a, STATIC,   REQUIRED, FLOAT,    i,                 3) \
-X(a, STATIC,   REQUIRED, FLOAT,    max_i,             4) \
-X(a, STATIC,   OPTIONAL, FLOAT,    i_expo,           13)
+X(a, STATIC,   REQUIRED, FLOAT,    max_i,             4)
 #define Config_PidConfig_CALLBACK NULL
-#define Config_PidConfig_DEFAULT (const pb_byte_t*)"\x0d\x00\x00\x00\x00\x15\x00\x00\x00\x00\x1d\x00\x00\x00\x00\x25\x00\x00\x00\x00\x6d\x00\x00\x00\x00\x00"
+#define Config_PidConfig_DEFAULT (const pb_byte_t*)"\x0d\x00\x00\x00\x00\x15\x00\x00\x00\x00\x1d\x00\x00\x00\x00\x25\x00\x00\x00\x00\x00"
 
 #define Config_BalancingConfig_FIELDLIST(X, a) \
 X(a, STATIC,   OPTIONAL, INT32,    max_start_angle,   3) \
@@ -160,11 +159,10 @@ X(a, STATIC,   OPTIONAL, FLOAT,    imu_beta,         11)
 #define Config_Misc_FIELDLIST(X, a) \
 X(a, STATIC,   OPTIONAL, FLOAT,    yaw_target,        4) \
 X(a, STATIC,   REQUIRED, FLOAT,    motor_speed_filter,   6) \
-X(a, STATIC,   REQUIRED, FLOAT,    stop_wheel_signal_p,   7) \
 X(a, STATIC,   OPTIONAL, FLOAT,    motor_max_speed,   8) \
 X(a, STATIC,   OPTIONAL, FLOAT,    target_angle_filter,  10)
 #define Config_Misc_CALLBACK NULL
-#define Config_Misc_DEFAULT (const pb_byte_t*)"\x25\x00\x00\x00\x00\x35\x6f\x12\x83\x3a\x3d\x00\x00\x00\x00\x45\x00\x80\xd4\x44\x55\x6f\x12\x83\x3a\x00"
+#define Config_Misc_DEFAULT (const pb_byte_t*)"\x25\x00\x00\x00\x00\x35\x6f\x12\x83\x3a\x45\x00\x80\xd4\x44\x55\x6f\x12\x83\x3a\x00"
 
 extern const pb_msgdesc_t Config_msg;
 extern const pb_msgdesc_t Config_Callibration_msg;
@@ -182,9 +180,9 @@ extern const pb_msgdesc_t Config_Misc_msg;
 /* Maximum encoded size of messages (where known) */
 #define Config_BalancingConfig_size              54
 #define Config_Callibration_size                 15
-#define Config_Misc_size                         25
-#define Config_PidConfig_size                    25
-#define Config_size                              181
+#define Config_Misc_size                         20
+#define Config_PidConfig_size                    20
+#define Config_size                              183
 #define DRV_COMMS_CONFIG_PB_H_MAX_SIZE           Config_size
 
 #ifdef __cplusplus
